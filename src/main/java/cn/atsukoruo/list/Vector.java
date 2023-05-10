@@ -1,8 +1,7 @@
-package cn.atsukoruo.vector;
+package cn.atsukoruo.list;
 
 import cn.atsukoruo.util.Fibonacci;
 
-import java.util.Arrays;
 import java.util.Random;
 import java.util.function.Consumer;
 
