@@ -32,6 +32,17 @@ final public class Vector<T> {
     }
 
     /**
+     * 获得一个容量为capacity，规模为size的Vector
+     * @param capacity 指定容量，并且要满足 capacity >= size;
+     * @param size 指定规模
+     */
+    public Vector(int capacity, int size) {
+        this.capacity = capacity;
+        this.size = size;
+        data = (T[])new Object[size];
+    }
+
+    /**
      * 复制数组[left, right)中的元素
      * @param data 要被复制的数组
      */
@@ -139,7 +150,7 @@ final public class Vector<T> {
     /**
      * 在指定的rank处插入指定元素
      * @param element 待插入的元素
-     * @param rank 插入的位置
+     * @param rank 插入的位置，要满足0 <= rank < size。
      * @return 返回参数rank
      */
     public int insert(T element, int rank) {
@@ -148,6 +159,17 @@ final public class Vector<T> {
         System.arraycopy(data, rank, data, rank + 1, size - 1 - (rank + 1) + 1);
         data[rank] = element;
         return rank;
+    }
+
+    /**
+     * 作为末元素插入
+     * @param element 待插入的元素
+     * @return 新插入元素的秩
+     */
+    public int insert(T element) {
+        //虽然这里size不满足insert(T element, int rank)对于rank的要求
+        //但是可以保证语义
+        return insert(element, size);
     }
 
     /**

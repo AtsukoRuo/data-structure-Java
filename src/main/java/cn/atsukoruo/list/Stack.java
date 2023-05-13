@@ -34,4 +34,18 @@ public class Stack<T> {
         List.ListNode<T> element = stack.last();
         return element == null ? null : element.data();
     }
+
+    /**
+     * 查询栈中是否有该元素，要求元素重载equal方法
+     * @param element 待查找的元素
+     * @return 查找成功返回true
+     */
+    public boolean find(T element) {
+        return stack.find(element, stack.size(), stack.trailer) == null;
+    }
+
+    @Override
+    public String toString() {
+        return stack.toString();
+    }
 }

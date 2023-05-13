@@ -29,7 +29,7 @@ final public class List<T> {
         private ListNode<U> insertAsPerv(U data) {
             ListNode<U> temp = new ListNode<U>(data, this.prev, this);
             this.prev.next = temp;
-            this.prev = new ListNode<U>(data);
+            this.prev = temp;
             return temp;
         }
 
@@ -44,10 +44,15 @@ final public class List<T> {
             this.next = temp;
             return temp;
         }
+
+        /**
+         * @return 返回节点的数据
+         */
+        public U data() { return data; }
     }
 
-    private ListNode<T> header;        //头哨兵
-    private ListNode<T> trailer;       //尾哨兵
+    ListNode<T> header;        //头哨兵
+    ListNode<T> trailer;       //尾哨兵
 
     private int size;               //记录有效节点的数量，不包括header与trailer
 
@@ -126,6 +131,8 @@ final public class List<T> {
     public ListNode<T> first() {
         return empty() ? null : header.next;
     }
+
+    public ListNode<T> last() { return empty() ? null : trailer.prev; }
 
     /**
      * 获取秩为rank的节点中的数据
@@ -383,5 +390,17 @@ final public class List<T> {
         mergeSort(list, p, m);
         mergeSort(list, q,n - m);
         merge(list, p, m, list, q, n - m);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append('[');
+        for (ListNode<?> node = header.next; node != trailer; node = node.next) {
+            builder.append(node.data);
+            if (node != trailer.prev) builder.append(", ");
+        }
+        builder.append(']');
+        return builder.toString();
     }
 }
