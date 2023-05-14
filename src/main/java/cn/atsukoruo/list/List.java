@@ -1,8 +1,9 @@
 package cn.atsukoruo.list;
 
+import java.util.Iterator;
 import java.util.function.Consumer;
 
-final public class List<T> {
+final public class List<T> implements Iterable<List.ListNode<T>> {
     /**
      * @param <U> 这样保证使用List<T>类型时，ListNode的数据类型为T
      */
@@ -215,6 +216,13 @@ final public class List<T> {
         return data;
     }
 
+    public T remove(int rank) {
+        ListNode<T> current = header.next;
+        while (--rank > -1) {
+            current = current.next;
+        }
+        return remove(current);
+    }
     /**
      * 清空列表中的所有节点
      * @return
@@ -402,5 +410,20 @@ final public class List<T> {
         }
         builder.append(']');
         return builder.toString();
+    }
+
+    @Override
+    public Iterator<ListNode<T>> iterator() {
+        return new Iterator<>() {
+            ListNode<T> current = header;
+            @Override
+            public boolean hasNext() {
+                return current != trailer;
+            }
+            @Override
+            public ListNode<T> next() {
+                return current = current.next;
+            }
+        };
     }
 }

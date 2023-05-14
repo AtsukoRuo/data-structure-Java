@@ -32,6 +32,12 @@ final public class Vector<T> {
     }
 
     /**
+     * @return 返回当前Vector的规模
+     */
+    public int size() {
+        return size;
+    }
+    /**
      * 获得一个容量为capacity，规模为size的Vector
      * @param capacity 指定容量，并且要满足 capacity >= size;
      * @param size 指定规模
@@ -93,6 +99,14 @@ final public class Vector<T> {
         return data[index];
     }
 
+    /**
+     * 将秩为index的元素设置为data
+     * @param data 要更新的数据
+     * @param index 被修改元素的秩
+     */
+    public void set(T data, int index) {
+        this.data[index] = data;
+    }
     /**
      * 置乱整个向量
      */
