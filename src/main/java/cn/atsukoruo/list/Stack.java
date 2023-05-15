@@ -44,6 +44,9 @@ public class Stack<T> {
         return stack.find(element, stack.size(), stack.trailer) == null;
     }
 
+    public void clear() {
+        stack = new List<T>();
+    }
     @Override
     public String toString() {
         return stack.toString();

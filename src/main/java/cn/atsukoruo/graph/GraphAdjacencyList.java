@@ -32,33 +32,69 @@ public class GraphAdjacencyList<VertexType, EdgeType>
     }
 
     @Override
-    public Integer dTime(int i) {
+    public void status(int i, VStatus status) {
+        V.get(i).status = status;
+    }
+
+    @Override
+    public int dTime(int i) {
         return V.get(i).dTime;
     }
 
     @Override
-    public Integer fTime(int i) {
+    public void dTime(int i, int time) {
+        V.get(i).dTime = time;
+    }
+
+    @Override
+    public int fTime(int i) {
         return V.get(i).fTime;
     }
 
     @Override
-    public Integer parent(int i) {
+    public void fTime(int i, int time) {
+        V.get(i).fTime = time;
+    }
+
+    @Override
+    public int parent(int i) {
         return V.get(i).parent;
     }
 
     @Override
-    public Integer priority(int i) {
+    public void parent(int i, int parent) {
+        V.get(i).parent = parent;
+    }
+
+    @Override
+    public int priority(int i) {
         return V.get(i).priority;
     }
 
     @Override
-    public int nextNeighbour(int i, int j) {
-        for (int k = 0; k < E.get(i).size(); k++) {
-            int temp = E.get(i).get(j).v;
-            if (temp < j) return temp;
-        }
-        return -1;
+    public void priority(int i, int priority) {
+        V.get(i).priority = priority;
     }
+
+    @Override
+    public Iterator<Integer> getIteratorOfNode(int i) {
+        return new Iterator<Integer>() {
+            Iterator<List.ListNode<Edge<EdgeType>>> iterator
+                = E.get(i).iterator();
+
+            int index = 0;
+            @Override
+            public boolean hasNext() {
+                return iterator.hasNext();
+            }
+
+            @Override
+            public Integer next() {
+                return iterator.next().data().v;
+            }
+        };
+    }
+
 
     @Override
     public boolean exists(int i, int j) {
@@ -70,17 +106,42 @@ public class GraphAdjacencyList<VertexType, EdgeType>
 
     @Override
     public EType type(int i, int j) {
-        return E.get(i).get(j).type;
+        for (var temp : E.get(i)) {
+            if (temp.data().v == j) {
+                return temp.data().type;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public void type(int i, int j, EType type) {
+        for (var temp : E.get(i)) {
+            if (temp.data().v == j) {
+                temp.data().type = type;
+                break;
+            }
+        }
     }
 
     @Override
     public EdgeType edge(int i, int j) {
-        return E.get(i).get(j).data;
+        for (var temp : E.get(i)) {
+            if (temp.data().v == j) {
+                return temp.data().data;
+            }
+        }
+        return null;
     }
 
     @Override
-    public Integer weight(int i, int j) {
-        return E.get(i).get(j).weight;
+    public int weight(int i, int j) {
+        for (var temp : E.get(i)) {
+            if (temp.data().v == j) {
+                return temp.data().weight;
+            }
+        }
+        return Integer.MIN_VALUE;
     }
 
     @Override
@@ -114,7 +175,7 @@ public class GraphAdjacencyList<VertexType, EdgeType>
     @Override
     public void insert(EdgeType edge, int w, int i, int j) {
         e += 1;
-        E.get(i).insertAsFirst(new Edge<>(edge, w));
+        E.get(i).insertAsFirst(new Edge<>(edge, w, j));
     }
 
     @Override

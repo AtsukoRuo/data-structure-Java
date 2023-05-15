@@ -2,6 +2,8 @@ package cn.atsukoruo.graph;
 
 import cn.atsukoruo.list.Vector;
 
+import java.util.Iterator;
+
 /**
  * @param <VertexType> 顶点数据域的类型
  * @param <EdgeType>    边数据域的类型
@@ -29,24 +31,58 @@ public class GraphMatrix<VertexType, EdgeType>
     public VStatus status(int i) { return V.get(i).status; }
 
     @Override
-    public Integer dTime(int i) { return V.get(i).dTime; }
+    public void status(int i, VStatus status) {
+        V.get(i).status = status;
+    }
+
+    @Override
+    public int dTime(int i) { return V.get(i).dTime; }
+
+    @Override
+    public void dTime(int i, int time) {
+        V.get(i).dTime = time;
+    }
 
 
     @Override
-    public Integer fTime(int i) { return V.get(i).fTime; }
+    public int fTime(int i) { return V.get(i).fTime; }
 
     @Override
-    public Integer parent(int i) { return V.get(i).parent; }
+    public void fTime(int i, int time) {
+        V.get(i).fTime = time;
+    }
 
     @Override
-    public Integer priority(int i) { return V.get(i).priority; }
-
+    public int parent(int i) { return V.get(i).parent; }
 
     @Override
-    public int nextNeighbour(int i, int j) {
-        while ((j > -1) && !exists(i, --j))
-            ;
-        return j;
+    public void parent(int i, int parent) {
+        V.get(i).parent = parent;
+    }
+
+    @Override
+    public int priority(int i) { return V.get(i).priority; }
+
+    @Override
+    public void priority(int i, int priority) {
+        V.get(i).priority = priority;
+    }
+
+    @Override
+    public Iterator<Integer> getIteratorOfNode(int i) {
+        return new Iterator<Integer>() {
+            int index = 0;
+            @Override
+            public boolean hasNext() {
+                return index != n;
+            }
+            @Override
+            public Integer next() {
+                while (!exists(i, index))
+                    index += 1;
+                return index++;
+            }
+        };
     }
 
 
@@ -61,6 +97,11 @@ public class GraphMatrix<VertexType, EdgeType>
         return E.get(i).get(j).type;
     }
 
+    @Override
+    public void type(int i, int j, EType type) {
+        E.get(i).get(j).type = type;
+    }
+
 
     @Override
     public EdgeType edge(int i, int j) {
@@ -69,7 +110,7 @@ public class GraphMatrix<VertexType, EdgeType>
 
 
     @Override
-    public Integer weight(int i, int j) {
+    public int weight(int i, int j) {
         return E.get(i).get(j).weight;
     }
 
