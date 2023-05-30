@@ -23,11 +23,15 @@ public class BinaryTree<T extends Comparable<T>> {
      */
     protected void updateHeightAbove(BinaryTreeNode<T> node) {
         while (node != null) {
+            int oldHeight = node.height;
             updateHeight(node);
+
+            //只有在树极度不平衡下，这种剪枝所带来的收益是最多的。
+            if (node.height == oldHeight)
+                break;
             node = node.parent;
         }
     }
-
 
     public BinaryTree() { }
 

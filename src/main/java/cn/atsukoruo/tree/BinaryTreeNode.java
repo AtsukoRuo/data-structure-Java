@@ -3,9 +3,6 @@ package cn.atsukoruo.tree;
 import cn.atsukoruo.list.Queue;
 import cn.atsukoruo.list.Stack;
 import java.util.function.Consumer;
-record A(Integer i) {
-
-}
 public class BinaryTreeNode<T extends Comparable<T>>
     implements Comparable<BinaryTreeNode<T>> {
     T data;         //数据域
@@ -31,9 +28,11 @@ public class BinaryTreeNode<T extends Comparable<T>>
     }
 
     public BinaryTreeNode(T data, BinaryTreeNode<T> parent) {
-        this.data = data;
-        this.parent = parent;
-        color = RBColor.RED;
+        this(data, parent, null, null, 0, RBColor.RED);
+    }
+
+    public BinaryTreeNode(T data, BinaryTreeNode<T> parent, BinaryTreeNode<T> leftChild, BinaryTreeNode<T> rightChild) {
+        this(data, parent, leftChild, rightChild, 0, RBColor.RED);
     }
 
     @Override

@@ -1,7 +1,7 @@
 package cn.atsukoruo.util;
 
 public class MutableInteger {
-    int value;
+    private int value;
 
     public MutableInteger() {}
     public MutableInteger(int value) {
