@@ -142,24 +142,25 @@ final public class Vector<T> {
      * @param left 待删除区间的左端
      * @param right 待查找区间的右端
      * @return 如果查找成功，返回元素的rank，如果有多个匹配的元素，那么返回最小的rank
-     * 查找失败返回 -1
+     * 查找失败返回 left - 1
      */
     public int find(T element, int left, int right) {
         for (int index = left; index < right; index++) {
             if (data[index].equals(element)) return index;
         }
-        return -1;
+        return left - 1;
     }
 
     /**
      * 在整个向量中查找指定的元素，并返回其rank（如果成功的话）
      * @param element 待查找元素
-     * @return 如果查找成功，返回元素的rank，如果有多个匹配的元素，那么返回最大的rank
-     * 查找失败返回 left - 1
+     * @return 如果查找成功，返回元素的rank，如果有多个匹配的元素，那么返回最小的rank
+     * 查找失败返回 -1
      */
     public int find(T element) {
         return find(element, 0, size);
     }
+
 
     /**
      * 在指定的rank处插入指定元素
@@ -278,6 +279,24 @@ final public class Vector<T> {
         return (second - 1) - first;
     }
 
+    /**
+     * 返回向量[left, right]中不大于element的最大元素的rank
+     * 后置条件 data[rank] <= element < data[rank + 1]
+     */
+    public static <T extends Comparable<T>>
+    int search(Vector<T> vector, T element) {
+        return search(vector, element, 0, vector.size());
+    }
+    /**
+     * 返回向量[left, right]中不大于element的最大元素的rank
+     */
+    public static <T extends Comparable<T>>
+    int search(Vector<T> vector, T element, int left, int right) {
+        int index = left;
+        while (left < right && vector.data[index++].compareTo(element) <= 0)
+            ;
+        return index - 1;
+    }
 
     /**
      * 在有序向量[left, right)中查找是否存在目标元素
