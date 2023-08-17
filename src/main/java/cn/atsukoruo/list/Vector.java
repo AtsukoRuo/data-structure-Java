@@ -12,10 +12,10 @@ import java.util.function.Consumer;
  * 因此对于有序向量的方法，一律用static方法 + 自限定类型<T extends Comparable<T>>来实现的
  */
 final public class Vector<T> {
-    private static final int DEFAULT_CAPACITY = 47;  //默认初始容量
-    private int size;       //当前有效元素的数量
-    private int capacity;   //容量
-    T[] data;       //数据
+    private static final int DEFAULT_CAPACITY = 47;     //默认初始容量
+    private int size;                                   //当前有效元素的数量
+    private int capacity;                               //容量
+    T[] data;                                           //数据
 
     final static private Random rand = new Random(System.currentTimeMillis());    //随机器，用于置乱算法中
 
@@ -63,13 +63,15 @@ final public class Vector<T> {
     }
 
     /**
-     * 在装载因子 = 1时，对容量进行两倍的扩容
+     * 对容量进行两倍的扩容
+     * 这里的扩容采用了懒惰策略只有在的确即将发生溢出时，才不得不将容量加倍
      */
     @SuppressWarnings("unchecked")
     private void expand() {
+        if (size < capacity) return;            //未发生上溢，不进行扩容
+        capacity = capacity << 1;
+        if (capacity < DEFAULT_CAPACITY) capacity = DEFAULT_CAPACITY;
         Object[] oldData = data;
-        capacity = Math.max(DEFAULT_CAPACITY, capacity * 2);
-
         data = (T[])new Object[capacity];
         System.arraycopy(oldData,0, data, 0, size);
     }
@@ -79,11 +81,10 @@ final public class Vector<T> {
      * 进行收缩，容量进行减半
      */
     private void shrink() {
-        if (capacity < DEFAULT_CAPACITY * 2
-        || size * 4 > capacity)
+        if (capacity < DEFAULT_CAPACITY * 2         //避免收缩到DEFAULT_CAPACITY以下
+        || size * 4 > capacity)                     //以25%作为装填因子的下限
             return;
         Object[] oldData = data;
-
         capacity /= 2;
         data = (T[])new Object[capacity];
         System.arraycopy(oldData, 0, data, 0, size);
@@ -117,11 +118,11 @@ final public class Vector<T> {
     /**
      * 置乱向量[left, right)中的元素
      * @param left 待置乱区间的左端点
-     * @param right 待置乱区间的左端点
+     * @param right 待置乱区间的右端点（不包括）
      */
-    public void unsort(int left, int right) {
-        for (int i = right - 1; i > left; i--) {
-            swap(this, i, rand.nextInt(i) + left);
+    private void unsort(int left, int right) {
+        for (int i = right; i > left; i--) {
+            swap(this, i - 1, rand.nextInt(i) + left);
         }
     }
 
@@ -137,7 +138,7 @@ final public class Vector<T> {
     }
 
     /**
-     * 在[left, right)中查找指定的元素，并返回其rank（如果成功的话）
+     * 在[left, right)中查找指定的元素，并返回其rank（如果成功的话），要求对象实现equals
      * @param element   待查找元素
      * @param left 待删除区间的左端
      * @param right 待查找区间的右端
@@ -145,10 +146,9 @@ final public class Vector<T> {
      * 查找失败返回 left - 1
      */
     public int find(T element, int left, int right) {
-        for (int index = left; index < right; index++) {
-            if (data[index].equals(element)) return index;
-        }
-        return left - 1;
+        while ((left < right--) && !(element.equals(data[right])))
+            ;
+        return right;
     }
 
     /**
@@ -165,14 +165,15 @@ final public class Vector<T> {
     /**
      * 在指定的rank处插入指定元素
      * @param element 待插入的元素
-     * @param rank 插入的位置，要满足0 <= rank < size。
-     * @return 返回参数rank
+     * @param rank 插入的位置，要满足0 <= rank <= size。
+     * @return 返回参数rank，插入失败返回-1
      */
     public int insert(T element, int rank) {
+        if (rank > size) return -1;
         expand();
-        size += 1;
-        System.arraycopy(data, rank, data, rank + 1, size - 1 - (rank + 1) + 1);
+        System.arraycopy(data, rank, data, rank + 1, size - rank);
         data[rank] = element;
+        size += 1;
         return rank;
     }
 
@@ -182,21 +183,19 @@ final public class Vector<T> {
      * @return 新插入元素的秩
      */
     public int insert(T element) {
-        //虽然这里size不满足insert(T element, int rank)对于rank的要求
-        //但是可以保证语义
         return insert(element, size);
     }
 
     /**
      * 删除向量区间[left, right)中的元素
      * @param left 待删除区间的左端点
-     * @param right 待删除区间的右端点
+     * @param right 待删除区间的右端点（不包括）
      * @return 返回删除元素的个数, 即right - left
      */
     public int remove(int left, int right) {
-        int length = (size - 1) - right + 1;
-        size -= length;
+        int length = right - left;
         System.arraycopy(data, left, data, right, length);
+        size -= length;
         shrink();
         return length;
     }
@@ -219,16 +218,14 @@ final public class Vector<T> {
      */
     @SuppressWarnings("unchecked")
     public int deduplicate() {
-        int deletedNum = 0;
+        int oldSize = size;
         for (int index = 1; index < size; index++) {
             if (find((T)data[index], 0, index) != -1) {
-                remove(index, index + 1);
-            } else {
-                deletedNum += 1;
+                remove(index);
+                index -= 1;
             }
         }
-        size -= deletedNum;
-        return deletedNum;
+        return oldSize - size;
     }
 
     /**
@@ -276,7 +273,7 @@ final public class Vector<T> {
         }
         vector.size = first + 1;
         vector.shrink();
-        return (second - 1) - first;
+        return second - first;
     }
 
     /**
@@ -309,11 +306,11 @@ final public class Vector<T> {
     public static <T extends Comparable<T>>
     int binarySearch(Vector<T> vector, T element, int left, int right) {
         while (left < right) {
-            int mid = (left + right) / 2;
+            int mid = (left + right) >> 1;
             int result = vector.data[mid].compareTo(element);
-            if (result < 0) {
+            if (result > 0) {
                 right = mid;
-            } else if (result > 0) {
+            } else if (result < 0) {
                 left = mid + 1;
             } else {
                 return mid;
@@ -403,17 +400,18 @@ final public class Vector<T> {
 
     public static <T extends Comparable<T>>
     void bubbleSort(Vector<T> vector, int left, int right) {
-        while (++left < right) {
-            boolean sorted = true;
+        while (++left < right) {                //自左向右，逐一检查各对相邻元素
+            boolean sorted = true;              //整体有序的标志
             int rank = left;
             while (rank < right) {
-                if (vector.data[rank - 1].compareTo(vector.data[rank]) > 0) {
-                    swap(vector, rank - 1, rank);
+                if (vector.data[rank - 1].compareTo(vector.data[rank]) > 0) {   //发现逆序对
+                    swap(vector, rank - 1, rank);       //通过交换使得局部有序
                     sorted = false;
                 }
                 rank += 1;
             }
             if (sorted) break;
+            right -= 1;
         }
     }
 
@@ -425,7 +423,7 @@ final public class Vector<T> {
      */
     public static <T extends Comparable<T>>
     void mergeSort(Vector<T> vector, int left, int right) {
-        if (right - left < 2) return;
+        if (right - left < 2) return;       //元素个数小于2个
         int mid = (left + right) / 2;
         mergeSort(vector, left, mid);
         mergeSort(vector, mid, right);
@@ -436,7 +434,7 @@ final public class Vector<T> {
     public static <T extends Comparable<T>>
     void merge(Vector<T> vector, int left, int right) {
         int mid = (left + right) / 2;
-        T[] tempArray = (T[])new Object[(right - 1) - left + 1];
+        T[] tempArray = (T[])new Object[right - left];
         int leftIndex = left;
         int rightIndex = mid;
         int index = 0;
@@ -451,13 +449,9 @@ final public class Vector<T> {
                 rightIndex += 1;
             }
         }
-        while (leftIndex < mid)
-            tempArray[index++] = vector.data[leftIndex++];
-        while (rightIndex < mid)
-            tempArray[index++] = vector.data[rightIndex++];
-        for (int rank = left; rank < right; rank++) {
-            vector.data[rank] = tempArray[rank - left];
-        }
+        while (leftIndex < mid) tempArray[index++] = vector.data[leftIndex++];
+        while (rightIndex < right) tempArray[index++] = vector.data[rightIndex++];
+        System.arraycopy(tempArray, 0, vector.data, 0, right - left);
     }
 
 
