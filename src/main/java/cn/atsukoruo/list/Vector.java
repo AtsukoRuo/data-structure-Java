@@ -194,8 +194,11 @@ final public class Vector<T> {
      */
     public int remove(int left, int right) {
         int length = right - left;
-        System.arraycopy(data, left, data, right, length);
-        size -= length;
+        if (right + length > size) {
+            length = size - right;
+        }
+        System.arraycopy(data, right, data, left, length);
+        size -= (right - left);
         shrink();
         return length;
     }

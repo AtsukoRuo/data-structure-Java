@@ -13,16 +13,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class VectorTester {
 
-    Vector<Integer> vector;
-
-    @BeforeEach
-    public void init() {
-        vector = new Vector<>();
-    }
 
     //测试单次插入是否成功
     @Test
     public void insert1() {
+        Vector<Integer> vector = new Vector<>();
         vector.insert(12);
         System.out.println(vector.toString());
     }
@@ -30,6 +25,7 @@ public class VectorTester {
     static final private int NUM_INSERT = 100_0000;
     @Test
     public void insert2() throws Exception {
+        Vector<Integer> vector = new Vector<>();
         for (int i = 0; i < NUM_INSERT; i++) {
             vector.insert(i);
         }
@@ -40,15 +36,7 @@ public class VectorTester {
         assertEquals(vector.size(), NUM_INSERT);
 
 
-        Class<Vector> vectorClass = (Class<Vector>)Vector.class;
-        Field field;
-        try {
-            field = vectorClass.getDeclaredField("capacity");
-        } catch (NoSuchFieldException e) {
-            return ;
-        }
-        field.setAccessible(true);
-        Object value = field.get(vector);
+        int value = getVectorCapacity(vector);
         assertTrue((int)value <= vector.size() * 2
                 && vector.size() <= (int) value);
         System.out.println((int)value);
@@ -69,5 +57,53 @@ public class VectorTester {
             ret.insert(i);
         }
         return ret;
+    }
+
+    @Test
+    public void deleteSingleElement() {
+        Vector<Integer> vector = getSequenceVector(1000);
+        vector.remove(0);
+        System.out.println(vector.get(0));
+        assertEquals(1, vector.get(0));
+        assertEquals(999, vector.size());
+    }
+
+    @Test
+    public void deleteElements() {
+        Vector<Integer> vector = getSequenceVector(1000);
+        vector.remove(100, 999);
+        assertEquals(999, vector.get(100));
+
+        vector = getSequenceVector(1000);
+        vector.remove(99, 110);
+        assertEquals(110, vector.get(99));
+        assertEquals(989, vector.size());
+    }
+
+    @Test
+    public void shrinkVector() {
+        Vector<Integer> vector = getSequenceVector(1000_000);
+        for (int i = 0; i < 999; i++) {
+            vector.remove(vector.size() - 1000, vector.size());
+        }
+        System.out.println("shrink : " + vector.size() + " " + getVectorCapacity(vector));
+    }
+
+    private int getVectorCapacity(Vector v) {
+        Class<Vector> vectorClass = (Class<Vector>)Vector.class;
+        Field field;
+        try {
+            field = vectorClass.getDeclaredField("capacity");
+            field.setAccessible(true);
+            Object value = field.get(v);
+            return (int)value;
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    @Test
+    public void deduplicateVector() {
+
     }
 }
