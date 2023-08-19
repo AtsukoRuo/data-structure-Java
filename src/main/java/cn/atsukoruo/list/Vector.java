@@ -2,6 +2,7 @@ package cn.atsukoruo.list;
 
 import cn.atsukoruo.util.Fibonacci;
 
+import java.awt.color.CMMException;
 import java.util.Random;
 import java.util.function.Consumer;
 
@@ -37,6 +38,7 @@ final public class Vector<T> {
     public int size() {
         return size;
     }
+
     /**
      * 获得一个容量为capacity，规模为size的Vector
      * @param capacity 指定容量，并且要满足 capacity >= size;
@@ -46,20 +48,6 @@ final public class Vector<T> {
         this.capacity = capacity;
         this.size = size;
         data = (T[])new Object[size];
-    }
-
-    /**
-     * 复制数组[left, right)中的元素
-     * @param data 要被复制的数组
-     */
-    @SuppressWarnings("unchecked")
-    private void copyFrom(T[] data, int left, int right) {
-        if (left < 0 || right < 0 || left >= right) {
-            return;
-        }
-        size = 0;
-        this.data = (T[])new Object[(right - left) / 2];
-        while (left < right) this.data[size++] = data[left++];
     }
 
     /**
@@ -95,8 +83,8 @@ final public class Vector<T> {
      * @param index 要获取元素的rank
      * @return rank为index的元素
      */
-
     public T get(int index) {
+        if (index >= size) throw new ArrayIndexOutOfBoundsException();
         return data[index];
     }
 
@@ -106,8 +94,10 @@ final public class Vector<T> {
      * @param index 被修改元素的秩
      */
     public void set(T data, int index) {
+        if (index >= size) throw new ArrayIndexOutOfBoundsException();
         this.data[index] = data;
     }
+
     /**
      * 置乱整个向量
      */
@@ -193,10 +183,10 @@ final public class Vector<T> {
      * @return 返回删除元素的个数, 即right - left
      */
     public int remove(int left, int right) {
-        int length = right - left;
-        if (right + length > size) {
-            length = size - right;
+        if (left < 0 || right > size) {
+            throw new ArrayIndexOutOfBoundsException();
         }
+        int length = size - right;
         System.arraycopy(data, right, data, left, length);
         size -= (right - left);
         shrink();
@@ -242,22 +232,6 @@ final public class Vector<T> {
         }
     }
 
-    /**
-     * 返回向量中逆序相邻元素对的总数，data[i + 1] >= data[i]为一个逆序对
-     * @param <T> 泛型参数必须实现Comparable接口
-     * @param vector 待检测的数组
-     * @return 向量中逆序相邻元素对的总数
-     * 向量有序当且仅当返回0
-     */
-    public static <T extends Comparable<T>> int disordered(Vector<T> vector) {
-        int num = 0;
-        for (int i = 1; i < vector.size; i++) {
-            if (vector.data[i - 1].compareTo(vector.data[i]) != -1) {
-                num++;
-            }
-        }
-        return num;
-    }
 
     /**
      * 对于有序向量的删除重复元素的高效实现，复杂度为O(n)<br>
@@ -265,7 +239,8 @@ final public class Vector<T> {
      * @param vector 待操作的数组
      * @return 删除多少个元素
      */
-    public static <T extends Comparable<T>> int uniquify(Vector<T> vector) {
+    public static <U extends Object & Comparable<U>>
+    int uniquify(Vector<U> vector) {
         // 双指针法
         int first = 0;
         int second = 0;
@@ -280,22 +255,26 @@ final public class Vector<T> {
     }
 
     /**
-     * 返回向量[left, right]中不大于element的最大元素的rank
+     * 返回向量[left, right)中不大于element的最大元素的rank
      * 后置条件 data[rank] <= element < data[rank + 1]
      */
-    public static <T extends Comparable<T>>
+    public static <T extends Object & Comparable<T>>
     int search(Vector<T> vector, T element) {
         return search(vector, element, 0, vector.size());
     }
+
     /**
-     * 返回向量[left, right]中不大于element的最大元素的rank
+     * 返回向量[left, right)中不大于element的最大元素的rank
+     * @param element 带查找元素
+     * @param left 区间左端点
+     * @param right 区间右端点
+     * @return 查找失败返回
      */
-    public static <T extends Comparable<T>>
+    public static <T extends Object & Comparable<T>>
     int search(Vector<T> vector, T element, int left, int right) {
-        int index = left;
-        while (left < right && vector.data[index++].compareTo(element) <= 0)
+        while (left < right-- && vector.data[right].compareTo(element) > 0)
             ;
-        return index - 1;
+        return right;
     }
 
     /**
@@ -306,7 +285,7 @@ final public class Vector<T> {
      * @param right 区间右端点
      * @return 查找失败时，返回-1。若命中多个元素时，不能保证返回的rank是最大的
      */
-    public static <T extends Comparable<T>>
+    public static <T extends Object & Comparable<T>>
     int binarySearch(Vector<T> vector, T element, int left, int right) {
         while (left < right) {
             int mid = (left + right) >> 1;
@@ -322,76 +301,9 @@ final public class Vector<T> {
         return -1;
     }
 
-    /**
-     * 在有序向量[left, right)中查找是否存在目标元素<br>
-     * 相比较binarySearch，该方法内部实现只判断了一次。最好情况下效率降低。
-     * 但是作为补偿，在最坏情况下的表现有所提高。
-     * @param vector 有序向量
-     * @param element 带查找的元素
-     * @param left 区间左端点
-     * @param right 区间右端点
-     * @return 查找失败时，返回-1。若命中多个元素时，不能保证返回的rank是最大的
-     */
-    public static <T extends Comparable<T>>
-    int binarySearchB(Vector<T> vector, T element, int left, int right) {
-        while (1 < right - left) {
-            int mid = (left + right) / 2;
-            if (vector.data[mid].compareTo(element) == -1) {
-                right = mid;
-            } else {
-                left = mid;
-            }
-        }
-        return vector.data[left].compareTo(element) == 0 ? left : -1;
-    }
-
-    /**
-     * 在有序向量[left, right)中查找是否存在目标元素<br>
-     * 相比较binarySearch，该方法内部实现只判断了一次。最好情况下效率降低。
-     * 但是作为补偿，在最坏情况下的表现有所提高。<br>
-     * @param vector 有序向量
-     * @param element 带查找的元素
-     * @param left 区间左端点
-     * @param right 区间右端点
-     * @return 有多个命中元素时，总能保证返回秩最大者；查找失败时，能够返回失败癿位置
-     */
-    public static <T extends Comparable<T>>
-    int binarySearchC(Vector<T> vector, T element, int left, int right) {
-        while (left < right) {
-            int mid = (left + right) / 2;
-            if (vector.data[mid].compareTo(element) == -1) {
-                right = mid;
-            } else {
-                left = mid + 1;
-            }
-        }
-        return left - 1;
-    }
-
-    /**
-     * 在有序向量[left, right)中查找是否存在目标元素，使用Fibonacci搜索算法
-     * @param vector 有序向量
-     * @param element 带查找的元素
-     * @param left 区间左端点
-     * @param right 区间右端点
-     * @return 查找失败时，返回-1。若命中多个元素时，不能保证返回的rank是最大的
-     */
-    public static <T extends Comparable<T>>
-    int fibonacciSearch(Vector<T> vector, T element, int left, int right) {
-        Fibonacci fibonacci = new Fibonacci((right - 1) - left + 1);
-        while (left < right) {
-            while (right - left < fibonacci.getCachedItem()) fibonacci.prev();
-            int mid = left + (int)fibonacci.getCachedItem();
-            int result = vector.data[mid].compareTo(element);
-            if (result < 0) {
-                right = mid;
-            } else if (result > 0) {
-                left = mid + 1;
-            } else  {
-                return mid;
-            }
-        }
-        return -1;
+    public static <T extends  Object & Comparable<T>>
+    int binarySearch(Vector<T> vector, T element) {
+        return binarySearch(vector, element, 0, vector.size);
     }
 
     /**
@@ -400,12 +312,11 @@ final public class Vector<T> {
      * @param left 区间左端点
      * @param right 区间右端点
      */
-
-    public static <T extends Comparable<T>>
-    void bubbleSort(Vector<T> vector, int left, int right) {
-        while (++left < right) {                //自左向右，逐一检查各对相邻元素
+    public static <T extends Object & Comparable<T>>
+    Vector<T> bubbleSort(Vector<T> vector, int left, int right) {
+        while (left < right) {                //自左向右，逐一检查各对相邻元素
             boolean sorted = true;              //整体有序的标志
-            int rank = left;
+            int rank = left + 1;
             while (rank < right) {
                 if (vector.data[rank - 1].compareTo(vector.data[rank]) > 0) {   //发现逆序对
                     swap(vector, rank - 1, rank);       //通过交换使得局部有序
@@ -416,25 +327,30 @@ final public class Vector<T> {
             if (sorted) break;
             right -= 1;
         }
+        return vector;
     }
+    public static <T extends Object & Comparable<T>>
+    Vector<T> bubbleSort(Vector<T> vector) {
 
+        return bubbleSort(vector, 0, vector.size);
+    }
     /**
      * 使用冒泡排序对向量的[left,right)中的元素有序化
      * @param vector 待排序的向量
      * @param left 区间左端点
      * @param right 区间右端点
      */
-    public static <T extends Comparable<T>>
-    void mergeSort(Vector<T> vector, int left, int right) {
-        if (right - left < 2) return;       //元素个数小于2个
+    public static <T extends Object & Comparable<T>>
+    Vector<T> mergeSort(Vector<T> vector, int left, int right) {
+        if (right - left < 2) return vector;       //元素个数小于2个
         int mid = (left + right) / 2;
         mergeSort(vector, left, mid);
         mergeSort(vector, mid, right);
         merge(vector, left, right);
+        return vector;
     }
-
     @SuppressWarnings("unchecked")
-    public static <T extends Comparable<T>>
+    private static <T extends Object & Comparable<T>>
     void merge(Vector<T> vector, int left, int right) {
         int mid = (left + right) / 2;
         T[] tempArray = (T[])new Object[right - left];
@@ -454,16 +370,27 @@ final public class Vector<T> {
         }
         while (leftIndex < mid) tempArray[index++] = vector.data[leftIndex++];
         while (rightIndex < right) tempArray[index++] = vector.data[rightIndex++];
-        System.arraycopy(tempArray, 0, vector.data, 0, right - left);
+        System.arraycopy(tempArray, 0, vector.data, left, right - left);
+    }
+    public static <T extends Object & Comparable<T>>
+    Vector<T> mergeSort(Vector<T> vector) {
+        return mergeSort(vector, 0, vector.size);
     }
 
+    public static <T> Vector<T> of(T[] elements) {
+        Vector<T> ret = new Vector<>(elements.length);
+        for (T element : elements) {
+            ret.data[ret.size++] = element;
+        }
+        return ret;
+    }
 
     @Override
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append('[');
         for (int index = 0; index < size; index++) {
-            stringBuilder.append(data[index].toString());
+            stringBuilder.append(data[index] == null ? "null" : data[index].toString());
             if (index != size - 1) stringBuilder.append(", ");
         }
         stringBuilder.append(']');
