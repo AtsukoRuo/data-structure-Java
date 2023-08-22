@@ -135,13 +135,14 @@ final public class List<T> implements Iterable<List.ListNode<T>> {
 
     public ListNode<T> last() { return empty() ? null : trailer.prev; }
 
+
     /**
      * 获取秩为rank的节点中的数据
      * @param rank 指定秩为rank的节点 0 <= rank < size
      * @return 秩为rank节点的数据。如果列表为空，则直接返回null
      */
     public T get(int rank) {
-        return empty() ? null : getNode(rank).data;
+        return rank > -1 && rank < size ? getNode(rank).data : null;
     }
 
     /**
@@ -149,14 +150,15 @@ final public class List<T> implements Iterable<List.ListNode<T>> {
      * @param rank 指定秩为rank的节点 0 <= rank < size
      * @return 秩为rank节点的数据。如果列表为空，则直接返回null
      */
-    private ListNode<T> getNode(int rank) {
+    ListNode<T> getNode(int rank) {
         ListNode<T> p = first();
         if (p == null) return null;
         while (rank-- > 0) p = p.next;
         return p;
     }
     /**
-     * 在无序列表内节点p的n个前驱中（不包括p），找到等于e的最后者
+     * 在无序列表内节点p的n - 1个前驱中以及p节点，找到等于e的元素
+     * 如果有多个匹配的元素，那么返回rank最大的元素
      * 基于equal方法来判等
      * @param data 要查找的数据
      * @param n p的前n个节点
@@ -164,11 +166,12 @@ final public class List<T> implements Iterable<List.ListNode<T>> {
      * @return 查找成功，返回秩最大的匹配节点。查找失败返回null
      */
     public ListNode<T> find(T data, int n, ListNode<T> p) {
-        while (n-- > 0) {
-            p = p.prev;
+        if (p == null) return null;
+        while (n-- > 0 && p != header) {
             if (data.equals(p.data)) {
                 return p;
             }
+            p = p.prev;
         }
         return null;
     }
@@ -209,6 +212,7 @@ final public class List<T> implements Iterable<List.ListNode<T>> {
      * @return 要被删除节点的数据
      */
     public T remove(ListNode<T> p) {
+        if (p == null) return null;
         T data = p.data;
         p.prev.next = p.next;
         p.next.prev = p.prev;
@@ -217,11 +221,7 @@ final public class List<T> implements Iterable<List.ListNode<T>> {
     }
 
     public T remove(int rank) {
-        ListNode<T> current = header.next;
-        while (--rank > -1) {
-            current = current.next;
-        }
-        return remove(current);
+        return remove(getNode(rank));
     }
     /**
      * 清空列表中的所有节点
@@ -267,7 +267,7 @@ final public class List<T> implements Iterable<List.ListNode<T>> {
      * 对于有序向量的唯一化
      * @return 删除节点的个数
      */
-    public static <U extends Comparable<U>>
+    public static <U extends Object & Comparable<U>>
     int uniquify(List<U> list) {
         int oldSize = list.size;
         ListNode<U> p = list.first();
@@ -282,47 +282,61 @@ final public class List<T> implements Iterable<List.ListNode<T>> {
     }
 
     /**
-     * 从p的前n个前驱中（不包括p）查找不大于data的最后者
+     * 从p的前n - 1个前驱以及p本身中查找不大于data的元素
+     * 如果有多个匹配元素，那么返回rank最大的
      * @param data 待查找的数据
      * @param n p的前n个前驱中
      * @param p 从p开始查找
-     * @return 找到不大于e的最后者，若查找失败返回左边界的前驱
+     * @return 找到不大于e的最后者，若查找失败返回null
      */
-    public static <T extends Comparable<T>>
+    public static <T extends Object & Comparable<T>>
     ListNode<T> search(List<T> list, T data, int n, ListNode<T> p) {
-        // 这里取等号的原因是要考虑左边界的前驱。而与左边界前驱比较是没有任何意义的
-        while (n-- >= 0) {
+        while (n-- > 0 && p != list.header) {
+            if (p.data.compareTo(data) <= 0)
+                return p;
             p = p.prev;
-            if (p.data.compareTo(data) <= 0) break;
         }
-        return p;
+        return null;
     }
 
     /**
      * 使用插入排序对链表有序化
      * @param list 待排序的链表
-     * @param p 起始位置。这个节点必须是在list中的
-     * @param n 对于起始位置p的n个元素排序（包括p）
+     * @param p 起始位置。这个节点必须是在参数list中的
+     * @param n 对于起始位置p的后n个元素排序（包括p）
      */
-    public static <T extends Comparable<T>>
-    void insertSort(List<T> list, ListNode<T> p, int n) {
+    static <T extends Object & Comparable<T>>
+    List<T> insertSort(List<T> list, ListNode<T> p, int n) {
         for (int rank = 0; rank < n; rank++) {
-            list.insertNext(p.data, search(list, p.data, rank, p));
+            //找到小于或等于p.data的节点，然后在它的next处插入一份新的节点p
+            ListNode<T> targetNode = p.prev;
+            while (targetNode != list.header) {
+                if (p.data.compareTo(targetNode.data) > 0)
+                    break;
+                targetNode = targetNode.prev;
+            }
+            list.insertNext(p.data, targetNode);
             p = p.next;
             list.remove(p.prev);        //因为在链表中插入了一个新的节点，因此要删除这多余的节点
         }
+        return list;
     }
 
+    public static <T extends Object & Comparable<T>>
+    List<T> insertSort(List<T> list) {
+        return List.insertSort(list, list.first(), list.size);
+    }
     /**
-     * 从有序链表指定节点p处开始，选出从位置p的n个元素中（包括p）的最大者
+     * 从有序链表指定节点p处开始，选出从位置p的前n个元素中（包括p）的最大者
      * @param list 待选择的链表
      * @param p 起始位置 这个节点必须是在list中的
-     * @param n 对于起始位置p的n个元素进行选择（包括p）
+     * @param n 对于起始位置p的后n个元素进行选择（包括p）
      * @return 返回最大的节点
      */
     public static <T extends Comparable<T>>
     ListNode<T> selectMax(List<T> list, ListNode<T> p, int n) {
         ListNode<T> max = p;
+        //n > 1是因为跳过了对p的考察，直接从p.next开始
         for (ListNode<T> currentNode = p.next; n > 1; n--, currentNode = currentNode.next) {
             if (currentNode.data.compareTo(max.data) > 0) {
                 max = currentNode;
@@ -335,10 +349,10 @@ final public class List<T> implements Iterable<List.ListNode<T>> {
      * 使用选择排序对链表有序化
      * @param list 待排序的链表
      * @param p 起始位置。这个节点必须是在list中的
-     * @param n 对于起始位置p的n个元素排序（包括p）
+     * @param n 对于起始位置p的后n个元素排序（包括p）
      */
-    public static <T extends Comparable<T>>
-    void selectionSort(List<T> list, ListNode<T> p, int n) {
+    static <T extends Comparable<T>>
+    List<T> selectionSort(List<T> list, ListNode<T> p, int n) {
         ListNode<T> left = p.prev;
         ListNode<T> right = p;
         for (int i = 0; i < n; i++) {
@@ -351,6 +365,11 @@ final public class List<T> implements Iterable<List.ListNode<T>> {
             right = right.prev;
             n--;
         }
+        return list;
+    }
+
+    public static <T extends Comparable<T>> List<T> selectionSort(List<T> list) {
+        return selectionSort(list, list.first(), list.size);
     }
 
     /**
@@ -363,24 +382,20 @@ final public class List<T> implements Iterable<List.ListNode<T>> {
      * @param m 合并的范围设置为m个节点（包括节点q）
      * @return 通过参数p返回合并后链表的新的起始位置
      */
-    public static <T extends Comparable<T>>
-    void merge(List<T> des, ListNode<T> p, int n, List<T> src, ListNode<T> q, int m) {
-        //在归并排序中 this = L && rank(p) + n = rank(q)
-        ListNode pp = p.prev;
-        while (m > 0) {
-            if (n > 0 && p.data.compareTo(q.data) <= 0) {
-                p = p.next;
-                if (q == p) {
-                    //这里处理的是 des = src 而且要合并的两个链表的范围是重合的
-                    break;
-                }
-                n--;
-            } else {
+    public static <T extends Object & Comparable<T>>
+    ListNode<T> merge(List<T> des, ListNode<T> p, int n, List<T> src, ListNode<T> q, int m) {
+        ListNode<T> ret = p.prev;
+        while (n > 0 && m > 0) {
+            if (p.data.compareTo(q.data) >= 0) {
                 q = q.next;
-                des.insertPrev(src.remove(q.prev), p);
+                p.insertAsPerv(src.remove(q.prev));
                 m--;
+            } else {
+                p = p.next;
+                n--;
             }
         }
+        return ret.next;
     }
 
     /**
@@ -389,17 +404,43 @@ final public class List<T> implements Iterable<List.ListNode<T>> {
      * @param p 起始位置。这个节点必须是在list中的
      * @param n 对于起始位置p的n个元素排序（包括p）
      */
-    public static <T extends Comparable<T>>
-    void mergeSort(List<T> list, ListNode p, int n) {
-        if (n < 2) return;
+    static <T extends Comparable<T>>
+    ListNode<T> mergeSort(List<T> list, ListNode p, int n) {
+        if (n < 2) return p;
         int m = n / 2;
         ListNode q = p;
-        for (int i = 0; i < m; i++) q = q.next;
-        mergeSort(list, p, m);
-        mergeSort(list, q,n - m);
-        merge(list, p, m, list, q, n - m);
+        for (int i = 0; i < m; i++)
+            q = q.next;
+        p = mergeSort(list, p, m);                          //这个是很重要的，因为左区间的左端点可能会改变
+        q = mergeSort(list, q,n - m);
+        p = merge(list, p, m, list, q, n - m);
+        return p;
     }
 
+    private int getRank(ListNode<T> node) {
+        ListNode<T> currentNode = header.next;
+        int index = 0;
+        while (currentNode != null) {
+            if (node == currentNode) return index;
+            currentNode = currentNode.next;
+            index++;
+        }
+        return -1;
+    }
+    @Deprecated
+    public static <T extends Comparable<T>>
+    List<T> mergeSort(List<T> list) {
+        mergeSort(list, list.first(), list.size);
+        return list;
+    }
+
+    public static <T> List<T> of(T[] elements) {
+        List<T> list = new List<>();
+        for (T element : elements) {
+            list.insertAsLast(element);
+        }
+        return list;
+    }
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
