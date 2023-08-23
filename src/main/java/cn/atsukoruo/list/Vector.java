@@ -3,6 +3,7 @@ package cn.atsukoruo.list;
 import cn.atsukoruo.util.Fibonacci;
 
 import java.awt.color.CMMException;
+import java.util.Iterator;
 import java.util.Random;
 import java.util.function.Consumer;
 
@@ -12,7 +13,7 @@ import java.util.function.Consumer;
  * 但是这样编码工作量巨大，本类仅仅是为了学习数据结构而练手的，不应该考虑这么多软件工程上的设计
  * 因此对于有序向量的方法，一律用static方法 + 自限定类型<T extends Comparable<T>>来实现的
  */
-final public class Vector<T> {
+final public class Vector<T> implements Iterable<T> {
     private static final int DEFAULT_CAPACITY = 47;     //默认初始容量
     private int size;                                   //当前有效元素的数量
     private int capacity;                               //容量
@@ -28,7 +29,7 @@ final public class Vector<T> {
 
     @SuppressWarnings("unchecked")
     public Vector(int capacity) {
-        this.capacity = capacity;
+        this.capacity = Math.max(capacity, DEFAULT_CAPACITY);
         data = (T[])new Object[capacity];
     }
 
@@ -45,7 +46,7 @@ final public class Vector<T> {
      * @param size 指定规模
      */
     public Vector(int capacity, int size) {
-        this.capacity = capacity;
+        this.capacity = Math.max(capacity, DEFAULT_CAPACITY);
         this.size = size;
         data = (T[])new Object[size];
     }
@@ -395,5 +396,21 @@ final public class Vector<T> {
         }
         stringBuilder.append(']');
         return stringBuilder.toString();
+    }
+
+    @Override
+    public Iterator<T> iterator() {
+        return new Iterator<T>() {
+            private int index = 0;
+            @Override public boolean hasNext() {
+                return index < size;
+            }
+            @Override public T next() {
+                return data[index++];
+            }
+            @Override public void remove() {
+                throw new UnsupportedOperationException();
+            }
+        };
     }
 }
