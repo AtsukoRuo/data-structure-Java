@@ -5,12 +5,35 @@ import cn.atsukoruo.list.Stack;
 import java.util.function.Consumer;
 public class BinaryTreeNode<T extends Comparable<T>>
     implements Comparable<BinaryTreeNode<T>> {
-    T data;         //数据域
+    T data;                         //数据域
     BinaryTreeNode<T> parent;
     BinaryTreeNode<T> leftChild;
     BinaryTreeNode<T> rightChild;
-    int height;         //在不同的树中，高度的定义是不同的
+    int height;                     //在不同的树中，高度的定义是不同的
     RBColor color;
+
+    public T getData() {
+        return data;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public RBColor getColor() {
+        return color;
+    }
+
+    public int getDepth() {
+        int cnt = -1;
+        BinaryTreeNode<T> node = this;
+        while (node != null) {
+            cnt += 1;
+            node = node.parent;
+        }
+        return cnt;
+    }
+    public int id;                     //用于debug打印树
 
     public BinaryTreeNode() {
         color = RBColor.RED;
@@ -25,6 +48,19 @@ public class BinaryTreeNode<T extends Comparable<T>>
         this.height = height;
         this.color = color;
 
+    }
+
+
+    private BinaryTreeNode<T> copyNode(BinaryTreeNode<T> node, BinaryTreeNode<T> parent) {
+        if (node == null) return null;
+        return new BinaryTreeNode<>(
+                node.data,
+                parent,
+                copyNode(node.leftChild, this),
+                copyNode(node.rightChild, this),
+                node.height,
+                node.color
+        );
     }
 
     public BinaryTreeNode(T data, BinaryTreeNode<T> parent) {
@@ -53,67 +89,108 @@ public class BinaryTreeNode<T extends Comparable<T>>
         return this.data.compareTo(((BinaryTreeNode<T>)obj).data) == 0;
     }
 
-
+    /**
+     * 判断该节点是否为root
+     */
     public static <T extends Comparable<T>>
     boolean isRoot(BinaryTreeNode<T> node) {
         return node.parent == null;
     }
 
+    /**
+     * 判断该节点是否为其父节点的左孩子，特别地，对于根节点返回false
+     */
     public static <T extends Comparable<T>>
     boolean isLeftChild(BinaryTreeNode<T> node) {
         return !isRoot(node) && node.parent.leftChild == node;
     }
 
+    /**
+     * 判断该节点是否为其父节点的有孩子，特别地，对于根节点返回false
+     */
     public static <T extends Comparable<T>>
     boolean isRightChild(BinaryTreeNode<T> node) {
         return !isRoot(node) && node.parent.rightChild == node;
     }
 
+    /**
+     * 是否有父亲
+     */
     public static <T extends Comparable<T>>
-    boolean hasRoot(BinaryTreeNode<T> node) {
+    boolean hasParent(BinaryTreeNode<T> node) {
         return !isRoot(node);
     }
 
+    /**
+     * 是否有左孩子
+     */
     public static <T extends Comparable<T>>
     boolean hasLeftChild(BinaryTreeNode<T> node) {
         return node.leftChild != null;
     }
 
+    /**
+     * 是否有右孩子
+     */
     public static <T extends Comparable<T>>
     boolean hasRightChild(BinaryTreeNode<T> node) {
         return node.rightChild != null;
     }
 
+    /**
+     * 是否至少有一个孩子
+     */
     public static <T extends Comparable<T>>
     boolean hasChild(BinaryTreeNode<T> node) {
         return hasLeftChild(node) || hasRightChild(node);
     }
 
+    /**
+     * 是否左右孩子都有
+     */
     public static <T extends Comparable<T>>
     boolean hasBothChild(BinaryTreeNode<T> node) {
         return hasLeftChild(node) && hasRightChild(node);
     }
 
+
+    /**
+     * 是否为叶子
+     */
     public static <T extends Comparable<T>>
     boolean isLeaf(BinaryTreeNode<T> node) {
         return !hasChild(node);
     }
 
+    /**
+     * 获得兄弟节点
+     */
     public static <T extends Comparable<T>>
     BinaryTreeNode<T> getSibling(BinaryTreeNode<T> node) {
         if (isRoot(node)) return null;
         return isLeftChild(node) ? node.parent.rightChild : node.parent.leftChild;
     }
 
+    /**
+     * 获得叔叔节点
+     */
     public static <T extends Comparable<T>>
     BinaryTreeNode<T> getUncle(BinaryTreeNode<T> node) {
         if (isRoot(node) || isRoot(node.parent)) return null;
         return isLeftChild(node.parent) ? node.parent.parent.rightChild : node.parent.parent.leftChild;
     }
 
+
+    /**
+     * 将data作为当前节点的左孩子插入到二叉树中
+     */
     public BinaryTreeNode<T> insertAsLeft(T data) {
         return leftChild = new BinaryTreeNode<>(data, this);
     }
+
+    /**
+     * 将data作为当前节点的右孩子插入到二叉树中
+     */
     public BinaryTreeNode<T> insertAsRight(T data) {
         return rightChild = new BinaryTreeNode<>(data, this);
     }
@@ -125,23 +202,22 @@ public class BinaryTreeNode<T extends Comparable<T>>
         travelPre(node.leftChild, consumer);
         travelPre(node.rightChild, consumer);
     }
-
     public static <T extends Comparable<T>>
     void travelPreIteration1(BinaryTreeNode<T> node, Consumer<T> consumer) {
-        do {
-            consumer.accept(node.data);
-            if (node.leftChild != null) {
-                node = node.leftChild;
-            } else if (node.rightChild != null) {
-                node = node.rightChild;
-            } else {
-                node = node.parent;
-            }
-        } while (!isRoot(node));
+        Stack<BinaryTreeNode<T>> nodes = new Stack<>();
+        if (node != null)
+            nodes.push(node);
+        while (!nodes.empty()) {
+            BinaryTreeNode<T> x = nodes.pop();
+            consumer.accept(x.data);
+            if (hasRightChild(x))
+                nodes.push(x.rightChild);
+            if (hasLeftChild(x))
+                nodes.push(x.leftChild);
+        }
     }
-
     public static <T extends Comparable<T>>
-    void travelPreIteration2(BinaryTreeNode<T> node, Consumer<T> consumer) {
+    void travelPreIteration(BinaryTreeNode<T> node, Consumer<T> consumer) {
         Stack<BinaryTreeNode<T>> rightNodes = new Stack<>();
         while (true) {
             while (node != null) {
@@ -150,8 +226,7 @@ public class BinaryTreeNode<T extends Comparable<T>>
                     rightNodes.push(node.rightChild);
                 node = node.leftChild;
             }
-            if (rightNodes.empty())
-                break;
+            if (rightNodes.empty()) break;
             node = rightNodes.pop();
         }
     }
@@ -165,7 +240,7 @@ public class BinaryTreeNode<T extends Comparable<T>>
     }
 
     public static <T extends Comparable<T>>
-    void travelInIteration1(BinaryTreeNode<T> node, Consumer<T> consumer) {
+    void travelInIteration(BinaryTreeNode<T> node, Consumer<T> consumer) {
         Stack<BinaryTreeNode<T>> leftNodes = new Stack<>();
         while (true) {
             while (node != null) {
@@ -180,34 +255,16 @@ public class BinaryTreeNode<T extends Comparable<T>>
         }
     }
 
-    public static <T extends Comparable<T>>
-    void travelInIteration2(BinaryTreeNode<T> node, Consumer<T> consumer) {
-        boolean hasBacktracked = false;
-        while (true) {
-            if (!hasBacktracked && node.leftChild != null) {
-                node = node.leftChild;
-            } else {
-                consumer.accept(node.data);
-                if (node.rightChild != null) {
-                    node = node.rightChild;
-                    hasBacktracked = false;
-                } else {
-                    if ((node = node.getSucceedNode()) == null) break;
-                    hasBacktracked = true;
-                }
-            }
-        }
-    }
 
     private static <T extends Comparable<T>>
     void gotoHLVFL(Stack<BinaryTreeNode<T>> stack) {
         BinaryTreeNode<T> node;
         while ((node = stack.top()) != null) {
-            if (node.leftChild != null) {
-                if (node.rightChild != null)
+            if (node.leftChild != null) {           //尽可能往左
+                if (node.rightChild != null)        //如果有右孩子，优先入栈
                     stack.push(node.rightChild);
                 stack.push(node.leftChild);
-            } else {
+            } else {                                //实在不得已才往右
                 stack.push(node.rightChild);
             }
         }
@@ -219,7 +276,7 @@ public class BinaryTreeNode<T extends Comparable<T>>
         Stack<BinaryTreeNode<T>> nodes = new Stack<>();
         if (x != null) nodes.push(x);
         while (!nodes.empty()) {
-            if (x != nodes.top())
+            if (x.parent != nodes.top())        //此时x必为右孩子
                 gotoHLVFL(nodes);
             x = nodes.pop();
             consumer.accept(x.data);
