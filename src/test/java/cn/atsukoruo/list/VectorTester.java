@@ -20,6 +20,7 @@ public class VectorTester {
     public void insert1() {
         Vector<Integer> vector = new Vector<>();
         vector.insert(12);
+        vector.insert(23);
     }
 
     static final private int NUM_INSERT = 100_0000;

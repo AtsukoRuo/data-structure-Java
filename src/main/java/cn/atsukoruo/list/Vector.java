@@ -45,10 +45,11 @@ final public class Vector<T> implements Iterable<T> {
      * @param capacity 指定容量，并且要满足 capacity >= size;
      * @param size 指定规模
      */
+    @SuppressWarnings("unchecked")
     public Vector(int capacity, int size) {
         this.capacity = Math.max(capacity, DEFAULT_CAPACITY);
         this.size = size;
-        data = (T[])new Object[size];
+        data = (T[])new Object[this.capacity];
     }
 
     /**
@@ -85,7 +86,8 @@ final public class Vector<T> implements Iterable<T> {
      * @return rank为index的元素
      */
     public T get(int index) {
-        if (index >= size) throw new ArrayIndexOutOfBoundsException();
+        if (index >= size)
+            throw new ArrayIndexOutOfBoundsException();
         return data[index];
     }
 
@@ -95,7 +97,8 @@ final public class Vector<T> implements Iterable<T> {
      * @param index 被修改元素的秩
      */
     public void set(T data, int index) {
-        if (index >= size) throw new ArrayIndexOutOfBoundsException();
+        if (index >= size)
+            throw new ArrayIndexOutOfBoundsException();
         this.data[index] = data;
     }
 

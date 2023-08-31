@@ -459,7 +459,7 @@ final public class List<T> implements Iterable<List.ListNode<T>> {
             ListNode<T> current = header;
             @Override
             public boolean hasNext() {
-                return current != trailer;
+                return current.next != trailer;
             }
             @Override
             public ListNode<T> next() {
