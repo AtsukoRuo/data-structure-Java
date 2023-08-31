@@ -10,7 +10,7 @@ import java.util.Iterator;
  */
 public class GraphMatrix<VertexType, EdgeType>
     extends Graph<VertexType, EdgeType> {
-    Vector<Vertex<VertexType>> V;       //顶点集
+    Vector<Vertex<VertexType>> V;               //顶点集
     Vector<Vector<Edge<EdgeType>>> E;         //边集（邻接矩阵）
 
     public GraphMatrix() {
@@ -130,10 +130,11 @@ public class GraphMatrix<VertexType, EdgeType>
         //先删(j, i)边
         for (int j = 0; j < n; j++) {
             if (exists(j, i)) {
-                E.get(j).remove(i);
                 V.get(j).outDegree -= 1;
             }
+            E.get(j).remove(i);
         }
+        n -= 1;            //节点规模减1，必须在这里更新，否则删除(i,j)边时会越界
 
         //再删(i, j)边
         for (int j = 0; j < n; j++) {
@@ -142,15 +143,16 @@ public class GraphMatrix<VertexType, EdgeType>
             }
         }
         E.remove(i);
-        n -= 1;            //节点规模减1
+
         return V.remove(i).data;
     }
 
 
     @Override
     public void insert(EdgeType edge, int w, int i, int j) {
-        if (exists(i,j)) return;
-        E.get(i).insert(new Edge<>(edge, w), j);
+        if (exists(i,j))
+            return;
+        E.get(i).set(new Edge<>(edge, w), j);
 
         //更新边计数与关联顶点的度数
         e++;
@@ -161,9 +163,10 @@ public class GraphMatrix<VertexType, EdgeType>
 
     @Override
     public EdgeType remove(int i, int j) {
-        if (!exists(i,j)) return null;
+        if (!exists(i,j))
+            return null;
         EdgeType edge = E.get(i).get(j).data;
-        E.get(i).set(null, i);
+        E.get(i).set(null, j);
         //更新边计数与关联顶点的度数
         e--;
         V.get(i).outDegree--;
@@ -171,5 +174,22 @@ public class GraphMatrix<VertexType, EdgeType>
         return edge;
     }
 
+    public void print() {
+        //左边是出边，上边是入边
+        System.out.format("    ");
+        for (int i = 0; i < n; i++) {
+            System.out.printf("%-4d", i);
+        }
+        System.out.printf("%n");
+        int index = 0;
+        for (Vector<Edge<EdgeType>> edges : E) {
+            System.out.printf("%-4d", index++);
+            for (Edge<EdgeType> edge : edges) {
+                System.out.printf("%-4s", edge != null ? String.valueOf(edge.weight) : "");
+            }
+            System.out.printf("%n");
+        }
+        System.out.printf("%n");
+    }
 }
 

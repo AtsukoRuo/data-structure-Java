@@ -10,4 +10,6 @@ public interface PriorityUpdater<VertexType, EdgeType> {
      */
     void update(Graph<VertexType, EdgeType> graph, int s, int w);
 
+
 }
+

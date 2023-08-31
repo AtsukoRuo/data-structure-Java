@@ -3,10 +3,12 @@ package cn.atsukoruo.graph;
 import cn.atsukoruo.list.List;
 import cn.atsukoruo.list.Queue;
 import cn.atsukoruo.list.Stack;
+import cn.atsukoruo.list.Vector;
 import cn.atsukoruo.util.MutableInteger;
 
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 
 //
@@ -17,10 +19,10 @@ public abstract class Graph<VertexType, EdgeType> {
             dTime(i, -1);
             fTime(i, -1);
             parent(i, -1);
-            priority(i, Integer.MAX_VALUE);
+            priority(i, Integer.MAX_VALUE / 2);     //防止在初态时溢出
             for (int j = 0; j < n; j++) {
                 if (exists(i, j)) {
-
+                    type(i, j, EType.UNDETERMINED);
                 }
             }
         }
@@ -33,13 +35,13 @@ public abstract class Graph<VertexType, EdgeType> {
      * 获取顶点集的规模
      * @return 顶点集的规模
      */
-    public int getN() { return n; }
+    public int getSizeOfV() { return n; }
 
     /**
      * 获取边集的规模
      * @return 边集的规模
      */
-    public int getE() { return e; }
+    public int getSizeOfE() { return e; }
 
     public abstract VertexType vertex(int i);
 
@@ -141,24 +143,28 @@ public abstract class Graph<VertexType, EdgeType> {
      * 从节点s开始广度优先搜索。
      * 并修改节点的dTime、parent状态以及某些边的type状态
      * 可以生成一个森林
-     * @param s 搜索的起始节点
+     * @param s 搜索的起始节点\
+     * @param consumer 传入节点的数据域，可以为null
      */
-    public void bfs(int s) {
+    public void bfs(int s, Consumer consumer) {
+        reset();
         int k = s;
         MutableInteger clock = new MutableInteger();
         do {
             if (status(k) == VStatus.UNDISCOVERED) {
-                bfs(s, clock);
+                bfs(s, clock, consumer);
             }
         } while (s != (k = (k + 1) % n));
     }
 
-    private void bfs(int s, MutableInteger clock) {
+    private void bfs(int s, MutableInteger clock, Consumer consumer) {
         Queue<Integer> queue = new Queue<>();
         queue.enqueue(s);
         status(s,VStatus.DISCOVERED);
         while (!queue.empty()) {
             s = queue.dequeue();
+            if (consumer != null)
+                consumer.accept(vertex(s));
             dTime(s, clock.getAndAdd(1));
             for (var iterator = getIteratorOfNode(s);
                  iterator.hasNext();) {
@@ -167,26 +173,35 @@ public abstract class Graph<VertexType, EdgeType> {
                     status(x, VStatus.DISCOVERED);
                     queue.enqueue(x);
                     type(s, x, EType.TREE);
-                    parent(x, s);
+                    parent(x, s);                   //遍历树根节点的父亲并不会从这里设置，而是从reset中设置，即为-1
                 } else {
-                    type(s, x, EType.CROSS);
+                    type(s, x, EType.CROSS);        //已经被访问到了，状态为DISCOVERED或者VISITED
                 }
             }
             status(s,VStatus.VISITED);
         }
     }
 
-    public void dfs(int s) {
+    /**
+     * 从节点s开始深度优先搜索。
+     * 并修改节点的dTime、parent状态以及某些边的type状态
+     * 可以生成一个森林
+     * @param s 搜索的起始节点
+     * @param consumer 传入节点的数据域，可以为null
+     */
+    public void dfs(int s, Consumer consumer) {
+        reset();
         int v = s;
-        status(s, VStatus.DISCOVERED);
+        //这里将int封装成MutableInteger主要是为了模拟 C++中的 int& clock。
+        //这样clock可以在多次调用dfs之间保持同步。
         MutableInteger clock = new MutableInteger();
         do {
             if (status(v) == VStatus.UNDISCOVERED)
-                dfs(v, clock);
-        } while (s != (v = (v + 1) & n));
+                dfs(v, clock, consumer);
+        } while (s != (v = (v + 1) % n));
     }
 
-    private void dfs(int s, MutableInteger clock) {
+    private void dfs(int s, MutableInteger clock, Consumer consumer) {
         dTime(s,clock.getAndAdd(1));
         status(s, VStatus.DISCOVERED);
         for (var iterator = getIteratorOfNode(s);
@@ -202,10 +217,12 @@ public abstract class Graph<VertexType, EdgeType> {
                 case UNDISCOVERED :
                     type(s,v,EType.TREE);
                     parent(v, s);
-                    dfs(v, clock);
+                    dfs(v, clock, consumer);
                     break;
             }
         }
+        if (consumer != null)
+            consumer.accept(vertex(s));
         status(s, VStatus.VISITED);
         clock.add(1);
         fTime(s, clock.value());
@@ -216,8 +233,8 @@ public abstract class Graph<VertexType, EdgeType> {
      * @return 如果图是有向有环图，那么返回一个栈，该栈中无任何元素
      */
     public Stack<VertexType> topologicalSort(int s) {
+        reset();
         Stack<VertexType> stack = new Stack<>();
-        status(s,VStatus.UNDISCOVERED);
         int t = s;
         do {
             if (status(t) == VStatus.UNDISCOVERED) {
@@ -242,8 +259,7 @@ public abstract class Graph<VertexType, EdgeType> {
                 case UNDISCOVERED:
                     if (!tSort(t, stack))
                         return false;
-
-                //visited的节点对于接下来拓扑排序无影响
+                //visited的节点对于接下来拓扑排序无影响，可以认为是已经从图中删除了，不再考虑
             }
         }
         status(s, VStatus.VISITED);
@@ -264,7 +280,7 @@ public abstract class Graph<VertexType, EdgeType> {
         int v = s;
         do {
             if (status(v) == VStatus.UNDISCOVERED) {
-                bcc(s, ans, clock);
+                bcc(v, ans, clock);
             }
         } while (s != (v = (v + 1) % n));
         return ans;
@@ -281,7 +297,7 @@ public abstract class Graph<VertexType, EdgeType> {
             switch (status(v)) {
                 case UNDISCOVERED :
                     parent(v, s);
-                    bcc(s, list, clock);
+                    bcc(v, list, clock);
                     if (fTime(v) < dTime(s)) {
                         fTime(s, Math.min(fTime(s), fTime(v)));
                     } else {
@@ -296,8 +312,14 @@ public abstract class Graph<VertexType, EdgeType> {
                     break;
             }
         }
+        status(s, VStatus.VISITED);
     }
 
+    /**
+     * 最佳搜索
+     * @param s 优先从s开始搜索，且s的优先级为0
+     * @param updater
+     */
     public void pfs(int s,
                     PriorityUpdater<VertexType, EdgeType> updater) {
         reset();
@@ -305,17 +327,15 @@ public abstract class Graph<VertexType, EdgeType> {
         do {
             if (status(v) == VStatus.UNDISCOVERED) {
                 //此时v是当前优先级最高的节点
-                status(v, VStatus.DISCOVERED);
+                status(v, VStatus.VISITED);
                 priority(v, 0);
-                parent(v, -1);
                 while (true) {
                     //更新节点v以及它的邻居的优先级
                     for (var iterator = getIteratorOfNode(v);
                         iterator.hasNext();) {
                         updater.update(this, v, iterator.next());
                     }
-
-                    //从全图中选取一个优先级最高的节点
+                    //从全图中选取一个优先级最高的且未被访问过的节点
                     for (int shortest = Integer.MAX_VALUE, w = 0; w < n; w++) {
                         if (status(w) == VStatus.UNDISCOVERED) {
                             if (priority(w) < shortest) {
@@ -324,9 +344,10 @@ public abstract class Graph<VertexType, EdgeType> {
                             }
                         }
                     }
-                    if (status(v) == VStatus.VISITED) break;
+                    if (status(v) == VStatus.VISITED)
+                        break;                //已经都访问完成
                     status(v, VStatus.VISITED);
-                    type(parent(v), v, EType.TREE);
+
                 }
             }
         } while (s != (v = (v + 1) % n));
@@ -336,25 +357,63 @@ public abstract class Graph<VertexType, EdgeType> {
         pfs(s, new PriorityUpdater<VertexType, EdgeType>() {
             @Override
             public void update(Graph<VertexType, EdgeType> graph, int s, int w) {
-                if (graph.status(s) == VStatus.UNDISCOVERED) {
-                    graph.priority(w,
-                        Math.min(graph.priority(w), graph.weight(s, w)));
+                if (graph.status(w) == VStatus.UNDISCOVERED) {
+                    graph.priority(w, Math.min(graph.priority(w), graph.weight(s, w)));
                 }
             }
         });
     }
 
-    public void Dijkstra(int s) {
+    /**
+     * Dijkstra最短路径算法，适合短路径（< 10_0000）正权图。
+     * @param s 源点s
+     * @return 返回源点到其他节点的最短路径
+     */
+    public Vector<Integer> Dijkstra(int s) {
+        Vector<Integer> ans = new Vector<Integer>(n, n);
+        priority(s, 0);
+        ans.set(0, s);
         pfs(s, new PriorityUpdater<VertexType, EdgeType>() {
             @Override
             public void update(Graph<VertexType, EdgeType> graph, int s, int w) {
                 if (graph.status(w) == VStatus.UNDISCOVERED) {
-                    graph.priority(w,
-                        Math.min(graph.priority(w), graph.priority(s) + graph.weight(s, w)));
+                    graph.priority(w, Math.min(graph.priority(w), graph.priority(s) + graph.weight(s, w)));
+                    ans.set(priority(w), w);
                 }
             }
         });
+        return ans;
     }
+
+    PriorityUpdater<VertexType, EdgeType> BFSPriorityUpdater = new PriorityUpdater<VertexType, EdgeType>() {
+        @Override
+        public void update(Graph<VertexType, EdgeType> graph, int s, int w) {
+            //以
+            if (status(w) == VStatus.UNDISCOVERED) {
+                if (priority(w) > priority(s) + 1) {
+                    priority(w, priority(s) + 1);
+                    parent(w, s);
+                }
+            }
+        }
+    };
+
+    PriorityUpdater<VertexType, EdgeType> DFSPriorityUpdater = new PriorityUpdater<VertexType, EdgeType>() {
+        @Override
+        public void update(Graph<VertexType, EdgeType> graph, int s, int w) {
+            if (status(w) == VStatus.UNDISCOVERED) {
+                if (priority(w) > priority(s) - 1) {
+                    priority(w, priority(s) - 1);
+                    parent(w, s);
+                }
+            }
+        }
+    };
+
+    /**
+     * 只打印顶点在内部的序号、边的权重、边的类型（可选）
+     */
+    abstract public void print();
 }
 
 //顶点状态
@@ -401,7 +460,7 @@ class Vertex<T> {
 
 class Edge<T> {
     T data;             // 数据域
-    int weight;     // 权重
+    int weight;         // 权重
     EType type;         // 边的类型
 
     int v;              // 关联节点，用于邻接表中
@@ -416,5 +475,6 @@ class Edge<T> {
         this(data, weight);
         this.v = v;
     }
+
 }
 

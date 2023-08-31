@@ -11,6 +11,10 @@ public class GraphAdjacencyList<VertexType, EdgeType>
     Vector<List<Edge<EdgeType>>> E;             //边集
     Vector<Vertex<VertexType>> V;               //点集
 
+    public GraphAdjacencyList() {
+        V = new Vector<Vertex<VertexType>>();
+        E = new Vector<List<Edge<EdgeType>>>();
+    }
     @Override
     public VertexType vertex(int i) {
         return V.get(i).data;
@@ -79,15 +83,11 @@ public class GraphAdjacencyList<VertexType, EdgeType>
     @Override
     public Iterator<Integer> getIteratorOfNode(int i) {
         return new Iterator<Integer>() {
-            Iterator<List.ListNode<Edge<EdgeType>>> iterator
-                = E.get(i).iterator();
-
-            int index = 0;
+            final Iterator<List.ListNode<Edge<EdgeType>>> iterator = E.get(i).iterator();
             @Override
             public boolean hasNext() {
                 return iterator.hasNext();
             }
-
             @Override
             public Integer next() {
                 return iterator.next().data().v;
@@ -98,8 +98,9 @@ public class GraphAdjacencyList<VertexType, EdgeType>
 
     @Override
     public boolean exists(int i, int j) {
-        for (int k = 0; k < E.get(i).size(); k++) {
-            if (E.get(i).get(k).v == j) return true;
+        Iterator<Integer> iterator = getIteratorOfNode(i);
+        while (iterator.hasNext()) {
+            if (iterator.next() == j) return true;
         }
         return false;
     }
@@ -107,7 +108,7 @@ public class GraphAdjacencyList<VertexType, EdgeType>
     @Override
     public EType type(int i, int j) {
         for (var temp : E.get(i)) {
-            if (temp.data().v == j) {
+            if (temp.data().v == j) {           //v是关联节点的编号
                 return temp.data().type;
             }
         }
@@ -147,6 +148,7 @@ public class GraphAdjacencyList<VertexType, EdgeType>
     @Override
     public int insert(VertexType data) {
         n += 1;
+        E.insert(new List<Edge<EdgeType>>());
         return V.insert(new Vertex<>(data));
     }
 
@@ -156,15 +158,18 @@ public class GraphAdjacencyList<VertexType, EdgeType>
         for (int j = 0; j < V.size(); j++) {
             if (j == i) continue;
             for (var temp : E.get(j)) {
-                if (temp.data().v == j) {
+                if (temp.data().v == i) {
                     V.get(j).outDegree -= 1;
                     E.get(j).remove(temp);
+                } else if (temp.data().v > i) {
+                    //保证关联节点的语义
+                    temp.data().v -= 1;
                 }
             }
         }
 
         //再删边(i, j)
-        for (int j = 0; j < E.get(i).size(); i++) {
+        for (int j = 0; j < E.get(i).size(); j++) {
             V.get(j).inDegree -= 1;
         }
         E.remove(i);
@@ -173,14 +178,27 @@ public class GraphAdjacencyList<VertexType, EdgeType>
     }
 
     @Override
-    public void insert(EdgeType edge, int w, int i, int j) {
+    public void insert(EdgeType edgeData, int w, int i, int j) {
         e += 1;
-        E.get(i).insertAsFirst(new Edge<>(edge, w, j));
+        E.get(i).insertAsLast(new Edge<>(edgeData, w, j));
     }
 
     @Override
     public EdgeType remove(int i, int j) {
         e -= 1;
         return E.get(i).remove(j).data;
+    }
+
+    @Override
+    public void print() {
+        for (int i = 0; i < n; i++) {
+            System.out.printf("%-4d", i);
+            for (List.ListNode<Edge<EdgeType>> node : E.get(i)) {
+                Edge<EdgeType> e = node.data();
+                System.out.printf("{v: %d, w: %d, type: %s}   ", e.v, e.weight, e.type);
+            }
+            System.out.printf("%n");
+        }
+        System.out.printf("%n");
     }
 }
