@@ -1,8 +1,9 @@
 package cn.atsukoruo.tree;
 
-import cn.atsukoruo.list.Stack;
 import cn.atsukoruo.list.Vector;
 
+import java.sql.Statement;
+import java.util.Stack;
 import java.util.function.Consumer;
 
 public class BinaryTree<T extends Comparable<T>> {
@@ -12,9 +13,11 @@ public class BinaryTree<T extends Comparable<T>> {
     /**
      * 更新当前节点的高度
      * @param node 要修改的节点
-     * @return 返回修改后的高度
+     * @return 返回修改后的高度,null为空返回-1
      */
     protected int updateHeight(BinaryTreeNode<T> node) {
+        if (node == null)
+            return -1;
         int leftHeight = node.leftChild == null ? -1 : node.leftChild.height;
         int rightHeight = node.rightChild == null ? -1 : node.rightChild.height;
         return node.height = 1 + Math.max(leftHeight, rightHeight);
@@ -28,7 +31,6 @@ public class BinaryTree<T extends Comparable<T>> {
         while (node != null) {
             int oldHeight = node.height;
             updateHeight(node);
-
             //只有在树极度不平衡下，这种剪枝所带来的收益是最多的。
             if (node.height == oldHeight)
                 break;
@@ -224,40 +226,22 @@ public class BinaryTree<T extends Comparable<T>> {
     }
 
     public void print() {
-        int size = (int)Math.pow(2, root.height + 1);
-        Vector<BinaryTreeNode<T>> nodes = new Vector<>(size, size);
-        Stack<BinaryTreeNode<T>> stack = new Stack<>();
         BinaryTreeNode<T> node = root;
-        root.id = (int)Math.pow(2, root.height);
+        Stack<BinaryTreeNode<T>> stack = new Stack<>();
         while (true) {
             while (node != null) {
-                nodes.set(node, node.id);
-                int diff = (int)Math.pow(2, node.height - 1);
+                System.out.printf("%s: {left: %5s, right: %5s, color: %s}%n", node.data,
+                        node.leftChild == null ? null : node.leftChild.data,
+                        node.rightChild == null ? null : node.rightChild.data,
+                        node.color);
                 if (node.rightChild != null) {
-                    node.rightChild.id = node.id - diff;
                     stack.push(node.rightChild);
-                }
-                if (node.leftChild != null) {
-                    node.leftChild.id = node.id + diff;
                 }
                 node = node.leftChild;
             }
-            if (stack.empty()) break;
+            if (stack.empty())
+                break;
             node = stack.pop();
-        }
-
-        for (var n : nodes) {
-            if (n != null) {
-                int depth = n.getDepth();
-                for (int i = 0; i < depth; i++) {
-                    System.out.print("      ");
-                }
-                if (!BinaryTreeNode.isRoot(n)) {
-                    System.out.print(BinaryTreeNode.isLeftChild(n) ? "\\  " : "/  ");
-                }
-                System.out.print(n.data);
-            }
-            System.out.println(" ");
         }
     }
 }

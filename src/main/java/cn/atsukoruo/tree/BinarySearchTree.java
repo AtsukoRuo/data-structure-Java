@@ -19,17 +19,13 @@ public  class BinarySearchTree<T extends Comparable<T>>
      */
     protected BinaryTreeNode<T> search(BinaryTreeNode<T> node, T e) {
         hot = null;
-        while (node != null) {
-            hot = node.parent;
-            if (node.data.compareTo(e) < 0) {
-                node = node.rightChild;
-            } else if (node.data.compareTo(e) > 0) {
-                node = node.leftChild;
-            } else {
-                return node;
-            }
+        int result = 0;
+        while (node != null
+            && (result = node.data.compareTo(e)) != 0) {
+            hot = node;
+            node = result < 0 ? node.rightChild : node.leftChild;
         }
-        return null;
+        return node;
     }
 
     /**
@@ -37,8 +33,8 @@ public  class BinarySearchTree<T extends Comparable<T>>
      * @param e 待查找的元素
      * @return 若查找成功返回匹配节点，否则返回null
      */
-    public BinaryTreeNode<T> search(T e) {
-        return search(root, e);
+    public boolean search(T e) {
+        return search(root, e) != null;
     }
 
     /**
@@ -51,20 +47,22 @@ public  class BinarySearchTree<T extends Comparable<T>>
         //但是在Java中却是不行的，实属遗憾。造成这一问题的实质就是在Java中并没有二级指针！
         if (isEmpty()) {
             root = new BinaryTreeNode<>(e, null);
+            size = 1;
+            return root;
         }
 
-        BinaryTreeNode<T> x = search(e);
-        if (x != null)
+        BinaryTreeNode<T> x = search(root, e);
+        if (x != null)          //这里约定在二叉搜索树中没有重复元素
             return x;
 
         x = new BinaryTreeNode<>(e, hot);
-        size += 1;
         if (e.compareTo(hot.data) < 0) {
             hot.leftChild = x;
         } else {
             hot.rightChild = x;
         }
-        updateHeightAbove(x);
+        size += 1;
+        updateHeightAbove(hot);
         return x;
     }
 
@@ -74,7 +72,7 @@ public  class BinarySearchTree<T extends Comparable<T>>
      * @return 如果未找到该节点，那么返回false。否则返回true
      */
     public boolean remove(T e) {
-        BinaryTreeNode<T> x = search(e);
+        BinaryTreeNode<T> x = search(root, e);
         if (x == null) {        //该节点并不存在
             return false;
         }
@@ -85,9 +83,9 @@ public  class BinarySearchTree<T extends Comparable<T>>
     }
 
     /**
-     * 删除指定节点，并设置hot为被删除节点的父节点
+     * 删除指定节点，并设置hot为实际上被删除节点的父节点，这样通过hot可以方便更新高度
      * @param x 被删除的节点
-     * @return 返回实际被删除节点接替者
+     * @return 返回被删除节点接替者
      */
     protected BinaryTreeNode<T> removeAt(BinaryTreeNode<T> x) {
         if (x.leftChild == null || x.rightChild == null) {      //处理单边情况
@@ -95,8 +93,11 @@ public  class BinarySearchTree<T extends Comparable<T>>
             hot = x.parent;
             return x.leftChild == null ? x.rightChild : x.leftChild;
         } else {            //双边情况
-            BinaryTreeNode<T> succeedNode = x.getSucceedNode();
-            Tool.swap(succeedNode.data, x.data);
+            //这里getPrevNode以及getSucceedNode都是可以的，使用Prev是因为可视化网站使用的是前驱
+            BinaryTreeNode<T> succeedNode = x.getPrevNode();
+            T temp = succeedNode.data;
+            succeedNode.data = x.data;
+            x.data = temp;
             removeAt1(succeedNode);
             hot = succeedNode.parent;
             return succeedNode;
@@ -117,33 +118,6 @@ public  class BinarySearchTree<T extends Comparable<T>>
         } else {
             x.parent.rightChild = child;
         }
-
-        /* 感谢GPT帮我优化下述代码
-        if (x.leftChild == null) {
-            if (x.parent == null) {
-                root = x.rightChild;
-                return;
-            } else {
-                if (BinaryTreeNode.isLeftChild(x)) {
-                    x.parent.leftChild = x.rightChild;
-                } else {
-                    x.parent.rightChild = x.rightChild;
-                }
-            }
-
-        } else {
-            if (x.parent == null) {
-                root = x.leftChild;
-                return;
-            } else {
-                if (BinaryTreeNode.isLeftChild(x)) {
-                    x.parent.leftChild = x.leftChild;
-                } else {
-                    x.parent.rightChild = x.leftChild;
-                }
-            }
-        }
-         */
     }
 
     /**
@@ -181,14 +155,13 @@ public  class BinarySearchTree<T extends Comparable<T>>
     }
 
     /**
-     * 对节点v实施zig-zig、或zig-zag旋转
+     * 对节点v实施zig-zig、或zig-zag旋转, 该方法会正确修正子树的高度
      * @param v 待旋转的节点
-     * @return 旋转后的等价二叉子树的根节点
+     * @return 旋转后的等价二叉子树的根节点，此时调用者必须重新设置根节点的父亲的孩子情况
      */
     protected  BinaryTreeNode<T> rotateAt(BinaryTreeNode<T> v) {
         BinaryTreeNode<T> p = v.parent;
-        BinaryTreeNode<T> g = v.parent;
-
+        BinaryTreeNode<T> g = p.parent;
         if (BinaryTreeNode.isLeftChild(p)) {
             if (BinaryTreeNode.isLeftChild(v)) {
                 p.parent = g.parent;

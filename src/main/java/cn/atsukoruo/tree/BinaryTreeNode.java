@@ -12,6 +12,8 @@ public class BinaryTreeNode<T extends Comparable<T>>
     int height;                     //在不同的树中，高度的定义是不同的
     RBColor color;
 
+    public int index;                     //用于debug打印树
+
     public T getData() {
         return data;
     }
@@ -33,7 +35,7 @@ public class BinaryTreeNode<T extends Comparable<T>>
         }
         return cnt;
     }
-    public int id;                     //用于debug打印树
+
 
     public BinaryTreeNode() {
         color = RBColor.RED;
@@ -305,6 +307,29 @@ public class BinaryTreeNode<T extends Comparable<T>>
         }
     }
 
+    /**
+     * 获取节点的前驱节点
+     * @return 若无前驱节点，返回null
+     */
+    public BinaryTreeNode<T> getPrevNode() {
+        BinaryTreeNode<T> x = this;
+        if (this.leftChild != null) {
+            x = this.leftChild;
+            while (x.rightChild != null) {
+                x = x.rightChild;
+            }
+        } else {
+            do {
+                x = x.parent;
+            } while (isLeftChild(x));
+        }
+        return x;
+    }
+
+    /**
+     * 获取节点的后继节点
+     * @return 若无后继节点，返回null
+     */
     public BinaryTreeNode<T> getSucceedNode() {
         BinaryTreeNode<T> x = this;
         if (this.rightChild != null) {
@@ -312,7 +337,7 @@ public class BinaryTreeNode<T extends Comparable<T>>
             while (x.leftChild != null)
                 x = x.leftChild;
         } else {
-            while (!isLeftChild(x))
+            while (isRightChild(x))
                 x = x.parent;
             x = x.parent;
         }
