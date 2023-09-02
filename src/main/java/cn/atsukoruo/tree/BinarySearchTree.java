@@ -95,9 +95,7 @@ public  class BinarySearchTree<T extends Comparable<T>>
         } else {            //双边情况
             //这里getPrevNode以及getSucceedNode都是可以的，使用Prev是因为可视化网站使用的是前驱
             BinaryTreeNode<T> succeedNode = x.getPrevNode();
-            T temp = succeedNode.data;
-            succeedNode.data = x.data;
-            x.data = temp;
+            x.data = succeedNode.data;
             removeAt1(succeedNode);
             hot = succeedNode.parent;
             return succeedNode;

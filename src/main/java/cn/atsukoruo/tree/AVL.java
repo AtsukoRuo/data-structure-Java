@@ -51,9 +51,8 @@ public class AVL<T extends Comparable<T>>
     @Override
     public BinaryTreeNode<T> insert (T element) {
         if (isEmpty()) {
-            root = new BinaryTreeNode<>(element, null);
             size++;
-            return root;
+            return root = new BinaryTreeNode<>(element, null);
         }
 
         BinaryTreeNode<T> node = search(root, element);
@@ -125,8 +124,7 @@ public class AVL<T extends Comparable<T>>
                 node = rotateAt(getTallerChild(getTallerChild(p)));
                 if (pp == null) {
                     root = node;
-                }
-                else if (node.data.compareTo(pp.data) < 0) {
+                } else if (node.data.compareTo(pp.data) < 0) {
                     pp.leftChild = node;
                 } else {
                     pp.rightChild = node;

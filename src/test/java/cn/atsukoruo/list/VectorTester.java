@@ -1,5 +1,6 @@
 package cn.atsukoruo.list;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -157,7 +158,7 @@ public class VectorTester {
     }
 
     @Test
-    public void search() {
+    public void searchTest1() {
         Vector<Integer> vector = getSequenceVector(1000);
         assertEquals(199 ,Vector.search(vector, 100, 200, 300));
         assertEquals(100, Vector.search(vector,100, 100, 300));
@@ -167,6 +168,13 @@ public class VectorTester {
         assertEquals(999, Vector.search(vector,10000));
     }
 
+    @Test
+    public void searchTest2() {
+        Vector<Integer> vector = getSequenceVector(10);
+        assertEquals(0, Vector.search(vector, 0));
+        assertEquals(-1, Vector.search(vector, -1));
+        assertEquals(9, Vector.search(vector, 11));
+    }
     @Test
     public void ofArrayTest() {
         Integer[] integers = new Integer[] {3, 5, 1, 2, 3};
@@ -205,5 +213,7 @@ public class VectorTester {
         }
         return ret;
     }
+
+
 
 }

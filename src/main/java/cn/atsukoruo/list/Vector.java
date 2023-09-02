@@ -30,7 +30,7 @@ final public class Vector<T> implements Iterable<T> {
     @SuppressWarnings("unchecked")
     public Vector(int capacity) {
         this.capacity = Math.max(capacity, DEFAULT_CAPACITY);
-        data = (T[])new Object[capacity];
+        data = (T[])new Object[this.capacity];
     }
 
     /**
@@ -163,7 +163,8 @@ final public class Vector<T> implements Iterable<T> {
      * @return 返回参数rank，插入失败返回-1
      */
     public int insert(T element, int rank) {
-        if (rank > size) return -1;
+        if (rank < 0 || rank > size)
+            throw  new ArrayIndexOutOfBoundsException();
         expand();
         System.arraycopy(data, rank, data, rank + 1, size - rank);
         data[rank] = element;
@@ -203,6 +204,8 @@ final public class Vector<T> implements Iterable<T> {
      * @return 返回删除的元素。
      */
     public T remove(int rank) {
+        if (rank < 0 || rank >= size)
+            throw new ArrayIndexOutOfBoundsException();
         @SuppressWarnings("unchecked")
         T element = (T)data[rank];
         remove(rank, rank + 1);
@@ -260,7 +263,6 @@ final public class Vector<T> implements Iterable<T> {
 
     /**
      * 返回向量[left, right)中不大于element的最大元素的rank
-     * 后置条件 data[rank] <= element < data[rank + 1]
      */
     public static <T extends Object & Comparable<T>>
     int search(Vector<T> vector, T element) {

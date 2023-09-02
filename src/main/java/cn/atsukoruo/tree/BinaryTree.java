@@ -24,7 +24,7 @@ public class BinaryTree<T extends Comparable<T>> {
     }
 
     /**
-     * 更新当前节点以及祖先节点的高度
+     * 更新当前节点以及祖先节点的高度，由于剪枝操作，所以最好不用用到旋转操作中
      * @param node 要修改的节点
      */
     protected void updateHeightAbove(BinaryTreeNode<T> node) {
@@ -243,6 +243,7 @@ public class BinaryTree<T extends Comparable<T>> {
                 break;
             node = stack.pop();
         }
+        System.out.printf("%n");
     }
 }
 
