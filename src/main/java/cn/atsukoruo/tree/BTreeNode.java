@@ -6,26 +6,28 @@ import cn.atsukoruo.list.Vector;
 public class BTreeNode<T extends Comparable<T>> {
 
     BTreeNode<T> parent;
-    Vector<BTreeNode<T>> children;
-    Vector<T> keys;
+    Vector<BTreeNode<T>> children;              //分支    第i个分支，对应第i、i-1个关键码
+    Vector<T> keys;                             //关键码， 第i个关键码对应第i、i+1个分支
 
+    /**
+     * 初始化时，分支与关键码个数都是0。
+     */
     BTreeNode() {
         parent = null;
-        children.insert(null, 0);
-        //分支总比关键码多一，这对于空节点来说也成立
+        children = new Vector<>();
+        keys = new Vector<>();
     }
 
-    BTreeNode(T element) {
-        this(element, null, null);
+    public void print() {
+        System.out.printf("%s: {%n    key: ", super.toString());
+        for (T data : keys) {
+            System.out.printf("%s, ", data);
+        }
+        System.out.printf("%n    children: ");
+        for (BTreeNode temp : children) {
+            if (temp == null) continue;
+            System.out.printf("%s, ", temp.toString());
+        }
+        System.out.printf("%n} %n");
     }
-
-    BTreeNode(T element, BTreeNode<T> child0, BTreeNode<T> child1) {
-        parent = null;
-        children.insert(child0, 0);
-        children.insert(child1, 1);
-        keys.insert(element, 0);
-        if (child0 != null) child0.parent = this;
-        if (child1 != null) child1.parent = this;
-    }
-
 }
