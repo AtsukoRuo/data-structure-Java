@@ -52,7 +52,7 @@ public class RBTreeTester {
     @Test
     public void remove2Test() {
         RBTree<Integer> tree = new RBTree<>();
-        final int COUNT = 1_0000;
+        final int COUNT = 100_0000;
         Random random = new Random(System.currentTimeMillis());
         Vector<Integer> vector = new Vector<>();
         for (int i = 0; i < COUNT; i++) {
@@ -67,13 +67,12 @@ public class RBTreeTester {
             tree.remove(i);
         }
 
-//        for (int i : vector) {
-//            Assertions.assertTrue(!tree.search(i));
-//        }
+        for (int i : vector) {
+            Assertions.assertTrue(!tree.search(i));
+        }
         tree.travelLevel((node) -> {
             int leftHeight = node.leftChild == null ? -1 : node.leftChild.height;
             int rightHeight = node.rightChild == null ? -1 : node.rightChild.height;
-            System.out.printf("{%d %d}%n",leftHeight, rightHeight);
             Assertions.assertTrue(!RBTree.whetherUpdateBlackHeight(node));
         });
     }

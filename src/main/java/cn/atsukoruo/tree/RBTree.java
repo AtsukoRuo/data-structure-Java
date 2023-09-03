@@ -173,7 +173,18 @@ public class RBTree<T extends Comparable<T>> extends BinarySearchTree<T> {
                     updateHeight(p);
                     updateHeight(s);
                 } else {        //异侧
+
                     rotateAt(t);
+                    t.parent = g;
+                    if (g == null) {
+                        root = t;
+                    } else {
+                        if (g.data.compareTo(t.data) > 0) {
+                            g.leftChild = t;
+                        } else {
+                            g.rightChild = t;
+                        }
+                    }
                     t.color = p.color;
                     p.color = RBColor.BLACK;
                     updateHeight(p);

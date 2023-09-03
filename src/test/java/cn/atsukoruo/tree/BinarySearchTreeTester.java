@@ -1,5 +1,6 @@
 package cn.atsukoruo.tree;
 
+import cn.atsukoruo.list.Vector;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -84,5 +85,28 @@ public class BinarySearchTreeTester {
         tree.remove(100);
         tree.insert(1);
         tree.print();
+    }
+
+    @Test
+    public void remove4Test() {
+        BinarySearchTree<Integer> tree = new BinarySearchTree<>();
+        final int COUNT = 1000_0000;
+        Random random = new Random(System.currentTimeMillis());
+        Vector<Integer> vector = new Vector<>();
+        for (int i = 0; i < COUNT; i++) {
+            int data = random.nextInt(Integer.MAX_VALUE);
+            tree.insert(data);
+            if (i % 11 == 0) {
+                vector.insert(data);
+            }
+        }
+        vector.unsort();
+        for (int i : vector) {
+            tree.remove(i);
+        }
+
+        for (int i : vector) {
+            Assertions.assertTrue(!tree.search(i));
+        }
     }
 }
