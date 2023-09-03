@@ -47,8 +47,8 @@ public class BinaryTreeTester {
         p = tree.insertAsRight(n, 'p');
         o = tree.insertAsLeft(p, 'o');
     }
-    Consumer<Character> consumer = (data) -> {
-        System.out.print(data + " -> ");
+    Consumer<BinaryTreeNode<Character>> consumer = (node) -> {
+        System.out.print(node.data + " -> ");
     };
 
     @Test

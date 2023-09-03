@@ -96,6 +96,8 @@ public class BinaryTreeNode<T extends Comparable<T>>
      */
     public static <T extends Comparable<T>>
     boolean isRoot(BinaryTreeNode<T> node) {
+        if (node == null)
+            return false;
         return node.parent == null;
     }
 
@@ -164,12 +166,20 @@ public class BinaryTreeNode<T extends Comparable<T>>
         return !hasChild(node);
     }
 
+    public static <T extends Comparable<T>>
+    boolean isBlack(BinaryTreeNode<T> node) {
+        return node == null || node.color == RBColor.BLACK;
+    }
+
+    public static <T extends Comparable<T>>
+    boolean isRed(BinaryTreeNode<T> node) {
+        return !isBlack(node);
+    }
     /**
      * 获得兄弟节点
      */
     public static <T extends Comparable<T>>
     BinaryTreeNode<T> getSibling(BinaryTreeNode<T> node) {
-        if (isRoot(node)) return null;
         return isLeftChild(node) ? node.parent.rightChild : node.parent.leftChild;
     }
 
@@ -198,20 +208,20 @@ public class BinaryTreeNode<T extends Comparable<T>>
     }
 
     public static <T extends Comparable<T>>
-    void travelPre(BinaryTreeNode<T> node, Consumer<T> consumer) {
+    void travelPre(BinaryTreeNode<T> node, Consumer<BinaryTreeNode<T>> consumer) {
         if (node == null) return;
-        consumer.accept(node.data);
+        consumer.accept(node);
         travelPre(node.leftChild, consumer);
         travelPre(node.rightChild, consumer);
     }
     public static <T extends Comparable<T>>
-    void travelPreIteration1(BinaryTreeNode<T> node, Consumer<T> consumer) {
+    void travelPreIteration1(BinaryTreeNode<T> node, Consumer<BinaryTreeNode<T>> consumer) {
         Stack<BinaryTreeNode<T>> nodes = new Stack<>();
         if (node != null)
             nodes.push(node);
         while (!nodes.empty()) {
             BinaryTreeNode<T> x = nodes.pop();
-            consumer.accept(x.data);
+            consumer.accept(x);
             if (hasRightChild(x))
                 nodes.push(x.rightChild);
             if (hasLeftChild(x))
@@ -219,11 +229,11 @@ public class BinaryTreeNode<T extends Comparable<T>>
         }
     }
     public static <T extends Comparable<T>>
-    void travelPreIteration(BinaryTreeNode<T> node, Consumer<T> consumer) {
+    void travelPreIteration(BinaryTreeNode<T> node, Consumer<BinaryTreeNode<T>> consumer) {
         Stack<BinaryTreeNode<T>> rightNodes = new Stack<>();
         while (true) {
             while (node != null) {
-                consumer.accept(node.data);
+                consumer.accept(node);
                 if (node.rightChild != null)
                     rightNodes.push(node.rightChild);
                 node = node.leftChild;
@@ -234,15 +244,15 @@ public class BinaryTreeNode<T extends Comparable<T>>
     }
 
     public static <T extends Comparable<T>>
-    void travelIn(BinaryTreeNode<T> node, Consumer<T> consumer) {
+    void travelIn(BinaryTreeNode<T> node, Consumer<BinaryTreeNode<T>> consumer) {
         if (node == null) return;
         travelIn(node.leftChild, consumer);
-        consumer.accept(node.data);
+        consumer.accept(node);
         travelIn(node.rightChild, consumer);
     }
 
     public static <T extends Comparable<T>>
-    void travelInIteration(BinaryTreeNode<T> node, Consumer<T> consumer) {
+    void travelInIteration(BinaryTreeNode<T> node, Consumer<BinaryTreeNode<T>> consumer) {
         Stack<BinaryTreeNode<T>> leftNodes = new Stack<>();
         while (true) {
             while (node != null) {
@@ -252,7 +262,7 @@ public class BinaryTreeNode<T extends Comparable<T>>
             if (leftNodes.empty())
                 break;
             node = leftNodes.pop();
-            consumer.accept(node.data);
+            consumer.accept(node);
             node = node.rightChild;
         }
     }
@@ -274,32 +284,32 @@ public class BinaryTreeNode<T extends Comparable<T>>
     }
 
     public static <T extends Comparable<T>>
-    void travelPostIteration(BinaryTreeNode<T> x, Consumer<T> consumer) {
+    void travelPostIteration(BinaryTreeNode<T> x, Consumer<BinaryTreeNode<T>> consumer) {
         Stack<BinaryTreeNode<T>> nodes = new Stack<>();
         if (x != null) nodes.push(x);
         while (!nodes.empty()) {
             if (x.parent != nodes.top())        //此时x必为右孩子
                 gotoHLVFL(nodes);
             x = nodes.pop();
-            consumer.accept(x.data);
+            consumer.accept(x);
         }
     }
 
     public static <T extends Comparable<T>>
-    void travelPost(BinaryTreeNode<T> node, Consumer<T> consumer) {
+    void travelPost(BinaryTreeNode<T> node, Consumer<BinaryTreeNode<T>> consumer) {
         if (node == null) return;
         travelPost(node.leftChild, consumer);
         travelPost(node.rightChild, consumer);
-        consumer.accept(node.data);
+        consumer.accept(node);
     }
 
     public static <T extends Comparable<T>>
-    void travelLevel(BinaryTreeNode<T> node, Consumer<T> consumer) {
+    void travelLevel(BinaryTreeNode<T> node, Consumer<BinaryTreeNode<T>> consumer) {
         Queue<BinaryTreeNode<T>> queue = new Queue<>();
         queue.enqueue(node);
         while (!queue.empty()) {
             node = queue.dequeue();
-            consumer.accept(node.data);
+            consumer.accept(node);
             if (node.leftChild != null)
                 queue.enqueue(node.leftChild);
             if (node.rightChild != null)

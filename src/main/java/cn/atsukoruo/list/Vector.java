@@ -1,8 +1,5 @@
 package cn.atsukoruo.list;
 
-import cn.atsukoruo.util.Fibonacci;
-
-import java.awt.color.CMMException;
 import java.util.Iterator;
 import java.util.Random;
 import java.util.function.Consumer;

@@ -1,10 +1,5 @@
 package cn.atsukoruo.tree;
 
-import cn.atsukoruo.util.Tool;
-
-import java.util.ArrayList;
-import java.util.List;
-
 public  class BinarySearchTree<T extends Comparable<T>>
     extends BinaryTree<T> {
 
@@ -46,9 +41,8 @@ public  class BinarySearchTree<T extends Comparable<T>>
         //在教科书中使用了C++ 指针 + 引用的特性，这可以很方便修改父类的指针，
         //但是在Java中却是不行的，实属遗憾。造成这一问题的实质就是在Java中并没有二级指针！
         if (isEmpty()) {
-            root = new BinaryTreeNode<>(e, null);
             size = 1;
-            return root;
+            return root = new BinaryTreeNode<>(e, null);
         }
 
         BinaryTreeNode<T> x = search(root, e);
@@ -83,32 +77,36 @@ public  class BinarySearchTree<T extends Comparable<T>>
     }
 
     /**
-     * 删除指定节点，并设置hot为实际上被删除节点的父节点，这样通过hot可以方便更新高度
-     * @param x 被删除的节点
-     * @return 返回被删除节点接替者
+     * 删除指定节点，并设置hot为实际上被删除节点的父节点
+     * 它不会更新size、但是会正确设置root、以及父节点的孩子
+     * @param x 要被被删除的节点
+     * @return 返回被实际上被删除节点接替者（不是前驱与后继）
      */
     protected BinaryTreeNode<T> removeAt(BinaryTreeNode<T> x) {
         if (x.leftChild == null || x.rightChild == null) {      //处理单边情况
-            removeAt1(x);
             hot = x.parent;
-            return x.leftChild == null ? x.rightChild : x.leftChild;
+            return removeAt1(x);
         } else {            //双边情况
             //这里getPrevNode以及getSucceedNode都是可以的，使用Prev是因为可视化网站使用的是前驱
-            BinaryTreeNode<T> succeedNode = x.getPrevNode();
-            x.data = succeedNode.data;
-            removeAt1(succeedNode);
-            hot = succeedNode.parent;
+            BinaryTreeNode<T> temp = x.getPrevNode();
+            hot = temp.parent;
+            x.data = temp.data;
+            BinaryTreeNode<T> succeedNode = removeAt1(temp);
             return succeedNode;
         }
     }
 
 
     /**
-     * 删除指定节点，该节点至多只有一个孩子
-     * @param x 被删除的节点
+     * 删除指定节点
+     * @param x 被删除的节点,要求该节点至多只有一个孩子
+     * @return 返回接替者（被删除节点的左孩子或者右孩子），其父亲已经设置完成
      */
-    private void removeAt1(BinaryTreeNode<T> x) {
+    private BinaryTreeNode<T> removeAt1(BinaryTreeNode<T> x) {
         BinaryTreeNode<T> child = x.leftChild == null ? x.rightChild : x.leftChild;
+        if (child != null) {
+            child.parent = x.parent;
+        }
         if (x.parent == null) {
             root = child;
         } else if (BinaryTreeNode.isLeftChild(x)) {
@@ -116,6 +114,7 @@ public  class BinarySearchTree<T extends Comparable<T>>
         } else {
             x.parent.rightChild = child;
         }
+        return child;
     }
 
     /**
@@ -125,7 +124,7 @@ public  class BinarySearchTree<T extends Comparable<T>>
      *               a     c
      *             /  \   /  \
      *            T0  T1 T2  T3
-     * @return 返回这个树的根节点
+     * @return 返回这个树的根节点, 调用者必须重新设置根节点的父亲的孩子情况
      */
     protected  BinaryTreeNode<T> connect34(
         BinaryTreeNode<T> a, BinaryTreeNode<T> b, BinaryTreeNode<T> c,
@@ -153,8 +152,8 @@ public  class BinarySearchTree<T extends Comparable<T>>
     }
 
     /**
-     * 对节点v实施zig-zig、或zig-zag旋转, 该方法会正确修正子树的高度
-     * @param v 待旋转的节点
+     * 视情况对节点v实施zig-zig、zig-zag、zag-zag、zag-zig旋转, 该方法会正确修正子树的高度
+     * @param v 待旋转的节点, 确保其父亲以及祖父存在
      * @return 旋转后的等价二叉子树的根节点，此时调用者必须重新设置根节点的父亲的孩子情况
      */
     protected  BinaryTreeNode<T> rotateAt(BinaryTreeNode<T> v) {
@@ -177,5 +176,20 @@ public  class BinarySearchTree<T extends Comparable<T>>
                 return connect34(g,v,p,g.leftChild,v.leftChild,v.rightChild,p.rightChild);
             }
         }
+    }
+    /**
+     * 节点q作为p的左孩子插入
+     */
+    void attachAsLeftChild(BinaryTreeNode<T> p, BinaryTreeNode<T> q) {
+        p.leftChild = q;
+        if (q != null) q.parent = p;
+    }
+
+    /**
+     * 节点q作为p的右孩子插入
+     */
+    void attachAsRightChild(BinaryTreeNode<T> p, BinaryTreeNode<T> q) {
+        p.rightChild = q;
+        if (q != null) q.parent = p;
     }
 }

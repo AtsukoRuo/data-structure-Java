@@ -3,21 +3,7 @@ package cn.atsukoruo.tree;
 public class SplayTree<T extends Comparable<T>>
     extends BinarySearchTree<T> {
 
-    /**
-     * 节点q作为p的左孩子插入
-     */
-    private void attachAsLeftChild(BinaryTreeNode<T> p, BinaryTreeNode<T> q) {
-        p.leftChild = q;
-        if (q != null) q.parent = p;
-    }
 
-    /**
-     * 节点q作为p的右孩子插入
-     */
-    private void attachAsRightChild(BinaryTreeNode<T> p, BinaryTreeNode<T> q) {
-        p.rightChild = q;
-        if (q != null) q.parent = p;
-    }
 
     /**
      * 将节点v伸展至树根，会修改整棵树的高度，以及会设置root

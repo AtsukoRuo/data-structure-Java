@@ -2,7 +2,6 @@ package cn.atsukoruo.tree;
 
 import cn.atsukoruo.list.Queue;
 import cn.atsukoruo.list.Vector;
-import cn.atsukoruo.util.Tool;
 
 final public class BTree<T extends Comparable<T>> {
     final int order;      //阶数

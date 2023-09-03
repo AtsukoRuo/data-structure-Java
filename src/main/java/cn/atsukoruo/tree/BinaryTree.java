@@ -202,19 +202,19 @@ public class BinaryTree<T extends Comparable<T>> {
         return new BinaryTree<>(x, n);
     }
 
-    public void travelLevel(Consumer<T> consumer) {
+    public void travelLevel(Consumer<BinaryTreeNode<T>> consumer) {
         BinaryTreeNode.travelLevel(root, consumer);
     }
 
-    public void travelPre(Consumer<T> consumer) {
+    public void travelPre(Consumer<BinaryTreeNode<T>> consumer) {
         BinaryTreeNode.travelPre(root, consumer);
     }
 
-    public void travelIn(Consumer<T> consumer) {
+    public void travelIn(Consumer<BinaryTreeNode<T>> consumer) {
         BinaryTreeNode.travelIn(root, consumer);
     }
 
-    public void travelPost(Consumer<T> consumer) {
+    public void travelPost(Consumer<BinaryTreeNode<T>> consumer) {
         BinaryTreeNode.travelPost(root, consumer);
     }
 
