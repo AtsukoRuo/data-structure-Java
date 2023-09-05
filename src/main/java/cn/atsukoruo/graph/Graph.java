@@ -4,10 +4,8 @@ import cn.atsukoruo.list.List;
 import cn.atsukoruo.list.Queue;
 import cn.atsukoruo.list.Stack;
 import cn.atsukoruo.list.Vector;
-import cn.atsukoruo.util.MutableInteger;
 
 import java.util.Iterator;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 

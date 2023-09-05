@@ -415,4 +415,14 @@ final public class Vector<T> implements Iterable<T> {
             }
         };
     }
+
+    public boolean hasContained(Vector<T> data) {
+        //TODO
+        return false;
+    }
+
+    public boolean intersection(Vector<T> data) {
+        //TODO
+        return false;
+    }
 }

@@ -1,4 +1,4 @@
-package cn.atsukoruo.util;
+package cn.atsukoruo.map;
 
 public class Entry<K extends Comparable<K>, V>
     implements Comparable<Entry<K, V>> {

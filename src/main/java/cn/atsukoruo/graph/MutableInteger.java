@@ -1,4 +1,4 @@
-package cn.atsukoruo.util;
+package cn.atsukoruo.graph;
 
 public class MutableInteger {
     private int value;

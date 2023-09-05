@@ -9,8 +9,8 @@ final public class List<T> implements Iterable<List.ListNode<T>> {
      */
     final public static class ListNode<U> {
         U data;
-        private ListNode<U> prev;
-        private ListNode<U> next;
+        ListNode<U> prev;
+        ListNode<U> next;
 
         private ListNode(U data, ListNode<U> prev, ListNode<U> next) {
             this.data = data;
@@ -21,6 +21,22 @@ final public class List<T> implements Iterable<List.ListNode<T>> {
             this.data = data;
         }
         private ListNode() {}
+
+        /**
+         * 获取当前节点的后继，注意可能返回尾哨兵。调用者需要调用List的isValid来进行判断
+         * @return
+         */
+        public ListNode<U> getNext() {
+            return this.next;
+        }
+
+        /**
+         * 获取当前节点的前驱，注意可能返回头哨兵。调用者需要调用List的isValid来进行判断
+         * @return
+         */
+        public ListNode<U> getPrev() {
+            return this.prev;
+        }
 
         /**
          * 在节点的前驱处添加节点，此节点不能是header哨兵节点
@@ -119,6 +135,9 @@ final public class List<T> implements Iterable<List.ListNode<T>> {
      */
     public int size() { return size; }
 
+    public boolean isValid(ListNode<T> node) {
+        return node != null && node != header && node != trailer;
+    }
     /**
      * 列表是否为空
      * @return 列表为空返回true
