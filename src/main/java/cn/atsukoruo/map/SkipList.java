@@ -27,6 +27,8 @@ public class SkipList<K extends Comparable<K>, V> extends Map<K, V> {
 
 
     static Random random = new Random(System.currentTimeMillis());
+
+
     @Override
     public boolean put(K key, V value) {
         Entry<K, V> entry = new Entry<>(key, value);
@@ -37,30 +39,33 @@ public class SkipList<K extends Comparable<K>, V> extends Map<K, V> {
         List.ListNode<QuadList<Entry<K, V>>> nodeOfQuadList = list.first();
         QuadListNode<Entry<K, V>> p = nodeOfQuadList.data().first();
 
+        //将p设置为底层的节点，且要作为key的前驱
         if ((p = skipSearch(nodeOfQuadList, p, key)) != null) {
             while (p.below != null)
                 p = p.below;                                    //p到最底层
         } else {
-            //这种情况对应第一个要插入的节点
-            p = nodeOfQuadList.data().header;             //将p设置为头哨兵
+            //此时，skipList为空。
+            p = nodeOfQuadList.data().header;                   //将p设置为头哨兵
         }
         assert p != null;
 
         QuadList<Entry<K, V>> quadList = list.last().data();
-        nodeOfQuadList = list.last();
+        nodeOfQuadList = list.last();                           //跳转到底层
         QuadListNode<Entry<K, V>> newNode = quadList.insertAfterAbove(entry, p, null);      //作为p的后续
+
         while (random.nextInt(100) <= 100 * probability) {
             while (quadList.isValid(p) && p.above == null) {
                 p = p.prev;
             }
             if (quadList.isValid(p)) {
                 p = p.above;
-            } else {                                            //p此时为header
-                if (quadList == list.first().data()) {          //已经到达顶部
-                    list.insertAsFirst(new QuadList<>());
+            } else {                                            //若p为头哨兵header
+                if (quadList == list.first().data()) {          //已经到达顶部，不能再向上
+                    list.insertAsFirst(new QuadList<>());       //插入新的一层
                 }
                 p = nodeOfQuadList.getPrev().data().header;     //p设置为上一层的header
             }
+
             nodeOfQuadList = nodeOfQuadList.getPrev();
             quadList = nodeOfQuadList.data();                   //上升一层
             assert quadList != null;
@@ -79,6 +84,7 @@ public class SkipList<K extends Comparable<K>, V> extends Map<K, V> {
         if (list.empty()) {
             return null;
         }
+
         assert list.first() != null;
         List.ListNode<QuadList<Entry<K, V>>> nodeOfQuadList = list.first();
         QuadList<Entry<K, V>> quadList = nodeOfQuadList.data();
@@ -88,13 +94,20 @@ public class SkipList<K extends Comparable<K>, V> extends Map<K, V> {
                 quadList.first(),
                 key
         ).data;
-        return entry != null ? entry.value : null;
+        //如果key比任何节点小，那么返回就是header，此时数据域为null
+        //如果key比任何节点大，那么返回就是last(),此时必须做一次特判
+        return entry != null ?
+                (entry.key.compareTo(key) == 0 ?
+                        entry.value
+                        : null)
+                : null;
     }
 
     @Override
     public boolean remove(K key) {
         List.ListNode<QuadList<Entry<K, V>>> nodeOfQuadList = list.first();
         QuadListNode<Entry<K, V>> p = nodeOfQuadList.data().first();
+
         //这里判空处理了空skipList的边界情况
         if ((p = skipSearch(nodeOfQuadList, p, key)) == null
                 || p.data.key.compareTo(key) != 0) {     //目标节点不存在
@@ -109,7 +122,7 @@ public class SkipList<K extends Comparable<K>, V> extends Map<K, V> {
             nodeOfQuadList = nodeOfQuadList.getNext();
         } while (p != null);
 
-        //如果list不为空，且塔顶没有key了。那么就删除塔顶
+        //塔顶没有key了。那么就删除塔顶
         while (!list.empty() && list.first().data().isEmpty()) {
             //由于先list.empty() 所以data()并不会返回null
             list.remove(list.first());
@@ -139,7 +152,7 @@ public class SkipList<K extends Comparable<K>, V> extends Map<K, V> {
      * 若key比任何QuadList中节点的key大，那么p此时为last()
      * 如果key命中了，那么就返回命中节点
      * @param nodeOfQuadList    开始搜索的水平层，一般从顶层开始
-     * @param p                 开始搜索的节点
+     * @param p                 开始搜索的节点，不能是头哨兵，而且是开始搜索水平层中的节点
      * @param key               待查询的key
      * @return                  不大于key的节点，如果nodeOfQuadList为null或者p为null，那么返回null
      */
@@ -154,7 +167,7 @@ public class SkipList<K extends Comparable<K>, V> extends Map<K, V> {
         }
 
         while (true) {
-            //从前往后查找，直至溢出至trailer或者出现更大的key
+            //在当前水平层 从前往后查找，直至溢出至trailer或者出现更大的key
             while (p.succ != null && p.data.key.compareTo(key) <= 0) {
                 p = p.succ;
             }
@@ -164,12 +177,14 @@ public class SkipList<K extends Comparable<K>, V> extends Map<K, V> {
             if (p.prev != null && p.data.key.compareTo(key) == 0) {
                 return p;      //命中
             }
-            nodeOfQuadList = nodeOfQuadList.getNext();
+            nodeOfQuadList = nodeOfQuadList.getNext();          //跳转至下一层的链表
             if (nodeOfQuadList == null || nodeOfQuadList.data() == null) {
-                //因为无法获取到List的尾哨兵，所以只能通过data() == null的方式来判断
-                //已经到达了底层
+                //因为无法获取到List的尾哨兵，所以只能通过data() == null的方式来判断。
+                //已经到达了底层，无法继续向下
                 return p;
             }
+            //p如果是头哨兵，那么将它设置为下一层链表的第一个元素
+            //否则，直接向下即可
             p = p.prev == null ? nodeOfQuadList.data().first() : p.below;
         }
     }
@@ -253,8 +268,8 @@ class QuadList<T extends Comparable<T>> {
     /**
      * 将data作为p的后继，b的上邻插入
      * @param data 待插入的数据
-     * @param p 新节点的前驱
-     * @param b 新节点的下驱，（默认为null）
+     * @param p 新节点的前驱，不能是trailer
+     * @param b 新节点的下驱，
      * @return 返回新节点
      */
     QuadListNode<T> insertAfterAbove(
@@ -265,7 +280,6 @@ class QuadList<T extends Comparable<T>> {
         size++;
         return p.insertAsSuccAbove(data, b);
     }
-
 
     /**
      * 遍历所有节点，并依次实施指定操作

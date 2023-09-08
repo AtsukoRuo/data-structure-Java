@@ -8,3 +8,4 @@ public abstract class Map<K, V> {
 
     abstract public boolean remove(K key);
 }
+
