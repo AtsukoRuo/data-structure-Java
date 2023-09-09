@@ -10,9 +10,12 @@ public class CompleteBinaryHeap<T extends Comparable<T>> implements Heap<T>{
          vector = new Vector<>();
     }
 
+    /**
+     * 引用vector，而不是复制vecotr
+     */
     public CompleteBinaryHeap(Vector<T> vector) {
-        this.vector = new Vector(vector);
-        size = vector.size();
+        this.vector = vector;
+        this.size = vector.size();
         heapify();
     }
 
@@ -131,10 +134,9 @@ public class CompleteBinaryHeap<T extends Comparable<T>> implements Heap<T>{
     public static <T extends Object & Comparable<T>>
     void heapSort(Vector<T> vector) {
         CompleteBinaryHeap<T> heap = new CompleteBinaryHeap<>(vector);
-        int index = vector.size() - 1;
-
         while (heap.size > 0) {
-            vector.set(heap.delMax(), index--);
+            Vector.swap(heap.vector, 0, --heap.size);
+            heap.percolateDown(0);
         }
     }
 }

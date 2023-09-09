@@ -50,6 +50,13 @@ public class SortTester {
     }
 
     @Test
+    public void quickSort() {
+        for (var e : inputs) {
+            System.out.println("quickSortTest :" + Vector.quickSort(Vector.of(e)));
+        }
+    }
+
+    @Test
     public void heapSort() {
         for (var e : inputs) {
             Vector<Integer> vector = Vector.of(e);

@@ -17,12 +17,7 @@ final public class Vector<T> implements Iterable<T> {
     T[] data;                                           //数据
 
     final static private Random rand = new Random(System.currentTimeMillis());    //随机器，用于置乱算法中
-    public Vector(Vector<T> vector) {
-        this.capacity = vector.capacity;
-        this.size = vector.size;
-        data = (T[])new Object[this.capacity];
-        System.arraycopy(vector.data, 0, data, 0, this.capacity);
-    }
+
 
     @SuppressWarnings("unchecked")
     public Vector() {
@@ -341,11 +336,10 @@ final public class Vector<T> implements Iterable<T> {
     }
     public static <T extends Object & Comparable<T>>
     Vector<T> bubbleSort(Vector<T> vector) {
-
         return bubbleSort(vector, 0, vector.size);
     }
     /**
-     * 使用冒泡排序对向量的[left,right)中的元素有序化
+     * 对向量的[left,right)中的元素有序化
      * @param vector 待排序的向量
      * @param left 区间左端点
      * @param right 区间右端点
@@ -385,6 +379,49 @@ final public class Vector<T> implements Iterable<T> {
     public static <T extends Object & Comparable<T>>
     Vector<T> mergeSort(Vector<T> vector) {
         return mergeSort(vector, 0, vector.size);
+    }
+
+    /**
+     * 对向量的[left,right)中的元素有序化
+     * @param vector 待排序的向量
+     */
+    public static <T extends Object & Comparable<T>>
+    Vector<T> quickSort(Vector<T> vector) {
+        return quickSort(vector, 0, vector.size);
+    }
+    /**
+     * 对向量的[left,right)中的元素有序化
+     * @param vector 待排序的向量
+     * @param left 区间左端点
+     * @param right 区间右端点
+     */
+    private static <T extends Object & Comparable<T>>
+    Vector<T> quickSort(Vector<T> vector, int left, int right) {
+        if (right - left < 2) return vector;
+        int mid = partition(vector, left, right - 1);
+        quickSort(vector, left, mid);
+        quickSort(vector, mid + 1, right);
+        return vector;
+    }
+
+    /**
+     * 在区间[left, right]中构造出一个中轴点
+     */
+    private static <T extends Object & Comparable<T>>
+    int partition(Vector<T> vector, int left, int right) {
+        swap(vector, left, left + rand.nextInt(right - left + 1));
+        T pivot = vector.get(left);
+        while (left < right) {
+            while ((left < right) && pivot.compareTo(vector.get(right)) <= 0)
+                right--;
+            vector.set(vector.get(right), left);
+            while ((left < right) && pivot.compareTo(vector.get(left)) >= 0) {
+                left++;
+            }
+            vector.set(vector.get(left), right);
+        }
+        vector.set(pivot, left);
+        return left;
     }
 
     public static <T> Vector<T> of(T[] elements) {
