@@ -17,6 +17,12 @@ final public class Vector<T> implements Iterable<T> {
     T[] data;                                           //数据
 
     final static private Random rand = new Random(System.currentTimeMillis());    //随机器，用于置乱算法中
+    public Vector(Vector<T> vector) {
+        this.capacity = vector.capacity;
+        this.size = vector.size;
+        data = (T[])new Object[this.capacity];
+        System.arraycopy(vector.data, 0, data, 0, this.capacity);
+    }
 
     @SuppressWarnings("unchecked")
     public Vector() {
@@ -122,11 +128,12 @@ final public class Vector<T> implements Iterable<T> {
      * @param lhs 待交换元素的rank
      * @param rhs 待交换元素的rank
      */
-    static private <U> void swap(Vector<U> vector, int lhs, int rhs) {
+    static public <U> void swap(Vector<U> vector, int lhs, int rhs) {
         U temp = vector.data[lhs];
         vector.data[lhs] = vector.data[rhs];
         vector.data[rhs] = temp;
     }
+
 
     /**
      * 在[left, right)中查找指定的元素，并返回其rank（如果成功的话），要求对象实现equals
