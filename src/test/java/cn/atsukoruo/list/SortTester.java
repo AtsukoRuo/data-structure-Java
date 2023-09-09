@@ -1,5 +1,6 @@
 package cn.atsukoruo.list;
 
+import cn.atsukoruo.heap.CompleteBinaryHeap;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -45,6 +46,15 @@ public class SortTester {
     public void selectionSort() {
         for (var e : inputs) {
             System.out.println("mergeSortTest :" + List.mergeSort(List.of(e)));
+        }
+    }
+
+    @Test
+    public void heapSort() {
+        for (var e : inputs) {
+            Vector<Integer> vector = Vector.of(e);
+            CompleteBinaryHeap.heapSort(vector);
+            System.out.println("heapSortTest : " + vector.toString());
         }
     }
 }
